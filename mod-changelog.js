@@ -104,7 +104,7 @@
             text('Current build: ' + RAPTOR_MOD_BUILD + '  |  ' + RAPTOR_MOD_DATE + '  |  Base v' + VERSION_NUMBER,0,34);
         });
 
-        changelogMenu.append(false,100,112,WIDTH-200,330,function(){
+        changelogMenu.append(false,100,108,WIDTH-200,352,function(){
             fill(COLORS.UI.text);
             noStroke();
             textAlign(LEFT,TOP);
@@ -112,18 +112,18 @@
 
             let y = 0;
             for(let release of CHANGELOG){
-                textSize(18);
+                textSize(16);
                 textStyle(BOLD);
                 text('Build ' + release.build + '  -  ' + release.date,0,y);
-                y += 24;
+                y += 20;
 
-                textSize(14);
+                textSize(12);
                 textStyle(NORMAL);
                 for(let change of release.changes){
                     text('• ' + change,12,y);
-                    y += 20;
+                    y += 16;
                 }
-                y += 12;
+                y += 8;
             }
         });
 
