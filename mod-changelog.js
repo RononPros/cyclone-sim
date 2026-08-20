@@ -2,10 +2,21 @@
 // Keep this build string and changelog updated with future mod releases so the
 // main menu immediately shows whether GitHub Pages served the newest version.
 (function(){
-    const RAPTOR_MOD_BUILD = '0.6.0';
+    const RAPTOR_MOD_BUILD = '0.7.0';
     const RAPTOR_MOD_DATE = '21 Aug 2026';
 
     const CHANGELOG = [
+        {
+            build: '0.7.0',
+            date: '21 Aug 2026',
+            changes: [
+                'Redesigned the existing season overview into cleaner grouped activity, totals, impacts, and most-intense-storm cards.',
+                'Rebuilt the season timeline as dedicated storm rows across a full 12-month season grid.',
+                'Timeline bars now change color through each storm lifecycle as its intensity classification changes.',
+                'Added storm-row hover highlighting, click-through to the existing storm intensity graph, and vertical mouse-wheel scrolling for active seasons.',
+                'Kept the existing storm intensity graph and all simulation physics unchanged.'
+            ]
+        },
         {
             build: '0.6.0',
             date: '21 Aug 2026',
