@@ -13,22 +13,26 @@ body{
 	background: -moz-linear-gradient(#BBB,#F3F3F3);
 	background: linear-gradient(#BBB,#F3F3F3);
 	font-family: Calibri, Arial;
-	display: flex;
-	align-items: center;
-	justify-content: center;
 }
 
 /*
  * The simulator renders internally at 960x540. Scale only the displayed
  * canvas so the simulation coordinate system stays unchanged while the game
  * fills as much of the browser window as possible at its native 16:9 ratio.
+ * Explicit fixed positioning avoids layout interactions that can push p5's
+ * canvas far off-screen.
  */
 canvas{
 	display: block !important;
+	position: fixed !important;
+	left: 50% !important;
+	top: 50% !important;
+	transform: translate(-50%, -50%) !important;
 	width: min(100vw, 177.7777778vh) !important;
 	height: min(56.25vw, 100vh) !important;
 	max-width: 100vw;
 	max-height: 100vh;
+	margin: 0 !important;
 }
 
 a{
