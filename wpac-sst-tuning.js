@@ -1,6 +1,6 @@
-// Western Pacific SST tuning for Normal mode.
+// Western Pacific environment tuning for Normal mode.
 // Keeps the base simulator climatology intact everywhere else while making
-// the WPac warm pool and late-summer poleward warm tongue more realistic.
+// WPac SSTs and vertical-wind-shear seasonality more realistic.
 (function(){
     const originalNormalAnomaly = ENV_DEFS.defaults.SSTAnomaly.mapFunc;
     ENV_DEFS[SIM_MODE_NORMAL].SSTAnomaly = {
@@ -60,6 +60,70 @@
             const lonFactor = lon <= 160 ? 1 : map(lon,160,200,1,0.35,true);
 
             return t + (tropicalBias + warmTongue*warmSeason)*lonFactor;
+        }
+    };
+
+    // --- Vertical wind shear climatology ---
+    // The stock model already moves the jet stream equatorward in winter and
+    // poleward in summer. This correction is intentionally moderate: it keeps
+    // that existing physics, but makes the tropical WPac seasonal envelope more
+    // realistic without changing LL/UL steering or storm tracks.
+    const originalNormalShear = ENV_DEFS.defaults.shear.mapFunc;
+    ENV_DEFS[SIM_MODE_NORMAL].shear = {
+        version: 1,
+        mapFunc: (u,x,y,z)=>{
+            const shear = originalNormalShear(u,x,y,z);
+            if(u.basin.mapType !== 8) return shear;
+
+            const lat = abs(u.coord.latitude);
+            let lon = u.coord.longitude;
+            if(lon < 0) lon += 360;
+
+            // Winter is somewhat more hostile; summer and early autumn favor a
+            // broader low-shear typhoon-development belt. Values are fractional
+            // corrections applied to the stock shear magnitude.
+            const seasonalCorrection = u.piecewise(u.yearfrac(z),[
+                [0, 0.10],
+                [1, 0.12],
+                [2, 0.10],
+                [3, 0.03],
+                [4,-0.06],
+                [5,-0.13],
+                [6,-0.18],
+                [7,-0.20],
+                [8,-0.18],
+                [9,-0.12],
+                [10,-0.02],
+                [11, 0.06],
+                [12, 0.10]
+            ]);
+
+            // Main modulation across roughly 10-25 N. The deep tropics retain
+            // winter low-shear escape routes, while the correction fades north
+            // of the typhoon belt where the explicit jet should dominate.
+            let latFactor;
+            if(lat <= 7) latFactor = 0.35;
+            else if(lat <= 12) latFactor = map(lat,7,12,0.35,0.85);
+            else if(lat <= 25) latFactor = 1.0;
+            else if(lat <= 32) latFactor = map(lat,25,32,1.0,0.55);
+            else if(lat <= 40) latFactor = map(lat,32,40,0.55,0.15);
+            else latFactor = 0.10;
+
+            // Strongest on the western warm-pool / Philippine Sea side, then
+            // gradually weaker toward the dateline and eastern map edge.
+            let shearLonFactor;
+            if(lon < 110) shearLonFactor = 0.85;
+            else if(lon <= 160) shearLonFactor = 1.0;
+            else if(lon <= 180) shearLonFactor = map(lon,160,180,1.0,0.85,true);
+            else shearLonFactor = map(lon,180,205,0.85,0.65,true);
+
+            let factor = 1 + seasonalCorrection*latFactor*shearLonFactor;
+            factor = constrain(factor,0.78,1.15);
+
+            // Magnitude only: preserve the direction and all of the stock
+            // procedural variability / trough-like shear pockets.
+            shear.mult(factor);
+            return shear;
         }
     };
 })();
