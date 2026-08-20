@@ -2,10 +2,19 @@
 // Keep this build string and changelog updated with future mod releases so the
 // main menu immediately shows whether GitHub Pages served the newest version.
 (function(){
-    const RAPTOR_MOD_BUILD = '0.7.0';
+    const RAPTOR_MOD_BUILD = '0.7.1';
     const RAPTOR_MOD_DATE = '21 Aug 2026';
 
     const CHANGELOG = [
+        {
+            build: '0.7.1',
+            date: '21 Aug 2026',
+            changes: [
+                'Fixed season-overview labels spilling outside the panel because a timeline constant accidentally shadowed p5 LEFT alignment.',
+                'Restored compact multi-storm-per-row season timelines with smarter non-overlap packing.',
+                'Kept intensity-colored lifecycle bars, hover/click storm selection, full-season month grid, and overflow scrolling.'
+            ]
+        },
         {
             build: '0.7.0',
             date: '21 Aug 2026',
