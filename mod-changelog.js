@@ -2,10 +2,20 @@
 // Keep this build string and changelog updated with future mod releases so the
 // main menu immediately shows whether GitHub Pages served the newest version.
 (function(){
-    const RAPTOR_MOD_BUILD = '0.4.0';
-    const RAPTOR_MOD_DATE = '20 Aug 2026';
+    const RAPTOR_MOD_BUILD = '0.5.0';
+    const RAPTOR_MOD_DATE = '21 Aug 2026';
 
     const CHANGELOG = [
+        {
+            build: '0.5.0',
+            date: '21 Aug 2026',
+            changes: [
+                'Improved warm-core L / tropical-remnant regeneration over favorable warm water.',
+                'Added a gentler organization^2 recovery path for remnants without changing active-TC intensification.',
+                'Added an 18-hour timeout for 1020+ hPa, sub-20 kt, nearly unorganized lows.',
+                'Weak-low timeout resets when a remnant reaches genuinely favorable recovery conditions.'
+            ]
+        },
         {
             build: '0.4.0',
             date: '20 Aug 2026',
