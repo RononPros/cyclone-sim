@@ -2,10 +2,22 @@
 // Keep this build string and changelog updated with future mod releases so the
 // main menu immediately shows whether GitHub Pages served the newest version.
 (function(){
-    const RAPTOR_MOD_BUILD = '0.7.1';
+    const RAPTOR_MOD_BUILD = '0.8.0';
     const RAPTOR_MOD_DATE = '21 Aug 2026';
 
     const CHANGELOG = [
+        {
+            build: '0.8.0',
+            date: '21 Aug 2026',
+            changes: [
+                'Added a Delete Storm button to the selected-storm info panel while the simulation is paused.',
+                'Storm deletion now removes active systems and cross-season StormRefs instead of only hiding the storm from one list.',
+                'Deleting a storm subtracts its ACE and classification contributions and rebuilds Most Intense from surviving storms.',
+                'Main-basin damage, deaths, and landfalls are also removed, including weighted handling for rare storms spanning New Year.',
+                'Designation/name/number counters are intentionally not rewound, preventing future storms from reusing deleted designations.',
+                'Deleted storms stay gone after the basin is saved; the Save Basin indicator is marked unsaved immediately after deletion.'
+            ]
+        },
         {
             build: '0.7.1',
             date: '21 Aug 2026',
