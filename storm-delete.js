@@ -182,7 +182,7 @@
         };
 
         const deleteStorm = async storm=>{
-            if(!(storm instanceof Storm) || deletingStorm) return;
+            if(!(storm instanceof Storm) || deletingStorm || !paused) return;
             const basin = storm.basin;
             if(!(basin instanceof Basin)) return;
 
@@ -256,6 +256,8 @@
                 basin.lastSaved = -1;
 
                 // Expose a monotonically increasing revision for UI/debugging.
+                // The timeline renderer below uses it to invalidate its packed-row
+                // cache the next time the user opens the affected season.
                 window.__raptorStormDeleteRevision = (window.__raptorStormDeleteRevision || 0) + 1;
                 console.info('Raptor Mod: deleted storm and updated season statistics.',storm);
             }catch(err){
@@ -265,8 +267,45 @@
             }
         };
 
-        // Useful from the console too, but the normal entry point is the button.
+        // Useful from the console too, but still requires the simulation paused.
         window.deleteStormFromBasin = deleteStorm;
+
+        // Locate the existing packed season timeline and wrap its renderer with
+        // a deletion-revision check. We cannot reach its private cache directly,
+        // so one Number-object render deliberately breaks strict equality once;
+        // the following normal frame rebuilds with the ordinary numeric season.
+        const walk = (node,pred)=>{
+            if(pred(node)) return node;
+            for(const child of node.children || []){
+                const found = walk(child,pred);
+                if(found) return found;
+            }
+        };
+        let timelineBox;
+        for(const root of UI.elements){
+            timelineBox = walk(root,u=>
+                u.renderFunc && u.renderFunc.toString().includes('packed rows')
+            );
+            if(timelineBox) break;
+        }
+        if(timelineBox){
+            const timelineRender = timelineBox.renderFunc;
+            let seenDeleteRevision = window.__raptorStormDeleteRevision || 0;
+            timelineBox.renderFunc = function(s){
+                const revision = window.__raptorStormDeleteRevision || 0;
+                const target = stormInfoPanel.target;
+                if(revision!==seenDeleteRevision && target!==undefined && !(target instanceof Storm)){
+                    stormInfoPanel.target = new Number(target);
+                    try{
+                        return timelineRender.call(this,s);
+                    }finally{
+                        stormInfoPanel.target = target;
+                        seenDeleteRevision = revision;
+                    }
+                }
+                return timelineRender.call(this,s);
+            };
+        }
 
         // The stock panel already reserves the last two rows for Jump To and
         // View Timeline. Put Delete Storm one row above those controls.
