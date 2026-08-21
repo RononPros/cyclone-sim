@@ -2,20 +2,26 @@
 // Keep this build string and changelog updated with future mod releases so the
 // main menu immediately shows whether GitHub Pages served the newest version.
 (function(){
-    const RAPTOR_MOD_BUILD = '0.8.0';
+    const RAPTOR_MOD_BUILD = '0.8.1';
     const RAPTOR_MOD_DATE = '21 Aug 2026';
 
     const CHANGELOG = [
         {
+            build: '0.8.1',
+            date: '21 Aug 2026',
+            changes: [
+                'Changed Delete Storm to mean force-end the currently active system instead of erasing the cyclone from history.',
+                'Deleted/ended storms now keep their track, timeline entry, name/number, ACE, impacts, and season statistics.',
+                'The button only appears for a storm that is alive at the current simulation time and still requires the simulation to be paused.',
+                'Manual termination mirrors normal storm-death bookkeeping and marks the basin unsaved so the finished state persists after saving.'
+            ]
+        },
+        {
             build: '0.8.0',
             date: '21 Aug 2026',
             changes: [
-                'Added a Delete Storm button to the selected-storm info panel while the simulation is paused.',
-                'Storm deletion now removes active systems and cross-season StormRefs instead of only hiding the storm from one list.',
-                'Deleting a storm subtracts its ACE and classification contributions and rebuilds Most Intense from surviving storms.',
-                'Main-basin damage, deaths, and landfalls are also removed, including weighted handling for rare storms spanning New Year.',
-                'Designation/name/number counters are intentionally not rewound, preventing future storms from reusing deleted designations.',
-                'Deleted storms stay gone after the basin is saved; the Save Basin indicator is marked unsaved immediately after deletion.'
+                'Added the first Delete Storm control to the selected-storm info panel.',
+                'Initial implementation removed the storm record and statistics entirely; this behavior was corrected in build 0.8.1.'
             ]
         },
         {
