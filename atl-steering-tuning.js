@@ -69,6 +69,58 @@
         };
     };
 
+    // Caribbean systems should usually keep a strong westward component, but
+    // central/western-Caribbean steering often gains a WNW/NW component as the
+    // cyclone approaches the western edge of the subtropical ridge. Keep this
+    // time-varying so Yucatan/Central-America tracks still happen naturally.
+    const caribbeanTurnState = (u,z)=>{
+        const lon = u.coord.longitude;
+        const lat = u.coord.latitude;
+        if(lon < -91 || lon > -58 || lat < 9 || lat > 28)
+            return {gate:0,pulse:0,angle:0,lift:0};
+
+        const southGate = map(lat,10.5,15.5,0,1,true);
+        const northGate = lat <= 22 ? 1 : map(lat,22,27,1,0,true);
+        const latGate = southGate*northGate;
+
+        let lonGate;
+        if(lon > -68)
+            lonGate = map(lon,-58,-68,0,0.35,true);
+        else if(lon > -78)
+            lonGate = map(lon,-68,-78,0.35,0.75,true);
+        else
+            lonGate = map(lon,-78,-90,0.75,1,true);
+
+        const seasonal = u.piecewise(u.yearfrac(z),[
+            [0,0.55],
+            [3,0.62],
+            [5,0.82],
+            [6.5,0.98],
+            [9,1.00],
+            [10.5,0.82],
+            [11.5,0.62]
+        ]);
+
+        const pulse = constrain(
+            0.62
+            + 0.30*Math.sin(TAU*z/(24*19) + 1.1)
+            + 0.18*Math.sin(TAU*z/(24*43) + 2.7),
+            0.16,1.05
+        );
+        const gate = latGate*lonGate*seasonal;
+
+        return {
+            gate,
+            pulse,
+            // Up to about 14 degrees of extra WNW turning in the strongest
+            // western-Caribbean setup, but much less during blocked periods.
+            angle: 14*PI/180*gate*pulse,
+            // A small deep-layer northward nudge keeps mature hurricanes from
+            // losing the Caribbean turn when UL steering dominates their motion.
+            lift: 0.38*gate*pulse
+        };
+    };
+
     // --- Jet stream ---
     ENV_DEFS[SIM_MODE_NORMAL].jetstream = {
         version: 1,
@@ -104,7 +156,7 @@
 
     // --- Low-level steering ---
     ENV_DEFS[SIM_MODE_NORMAL].LLSteering = {
-        version: 1,
+        version: 2,
         mapFunc: (u,x,y,z)=>{
             if(!isAtlantic(u)) return originalNormalLL(u,x,y,z);
 
@@ -125,7 +177,7 @@
                 + map(j,0,HEIGHT,u.modifiers.ridgingJetstreamEffectRange,-u.modifiers.ridgingJetstreamEffectRange),
                 0,1
             );
-            const trades = constrain(pow(
+            let trades = constrain(pow(
                 h + map(ridging,0,1,-u.modifiers.tradesRidgingEffectRange,u.modifiers.tradesRidgingEffectRange),
                 2
             )*3,0,u.modifiers.tradesMax);
@@ -133,12 +185,18 @@
             // Stock code extrapolates this tiny 0.9-1.0 control range through
             // most of the tropics. Clamp it so the intended trade-wind bounds
             // are respected instead of producing accidental out-of-range angles.
-            const tAngle = map(
+            let tAngle = map(
                 h,0.9,1,
                 u.modifiers.tradesAngle,
                 u.modifiers.tradesAngleEquator,
                 true
             );
+
+            // As storms cross the Caribbean, progressively introduce a WNW/NW
+            // component instead of leaving the entire sea in near-due-west flow.
+            const carib = caribbeanTurnState(u,z);
+            tAngle += carib.angle;
+            trades *= 1 - 0.10*carib.gate*carib.pulse;
 
             const a = map(u.noise(3),0,1,0,4*TAU);
             const m = pow(
@@ -161,13 +219,16 @@
     // of the same subtropical ridge so deep hurricanes still feel the western
     // ridge edge instead of instantly forgetting it as depth increases.
     ENV_DEFS[SIM_MODE_NORMAL].ULSteering = {
-        version: 1,
+        version: 2,
         mapFunc: (u,x,y,z)=>{
             const base = originalNormalUL(u,x,y,z);
             if(!isAtlantic(u)) return base;
 
             const ridge = ridgeVector(u,x,y,z,0.75);
             base.add(ridge.x,ridge.y);
+
+            const carib = caribbeanTurnState(u,z);
+            base.add(0,-carib.lift);
             return base;
         }
     };
