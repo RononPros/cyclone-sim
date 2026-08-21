@@ -2,10 +2,22 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.12.1';
+    const BUILD = '0.13.0';
     const BUILD_DATE = '21 Aug 2026';
 
     const RELEASES = [
+        {
+            build: '0.13.0',
+            date: BUILD_DATE,
+            changes: [
+                'Retuned Normal-mode tropical cyclone intensification rates globally across every basin map.',
+                'Reduced routine pressure deepening from the stock ~5% hourly response to an effective ~2.8% baseline, with faster deepening reserved for genuinely exceptional environments.',
+                'Reduced routine wind adjustment from the stock 15% hourly response to an 8% baseline so winds no longer race almost instantly toward the pressure-derived target.',
+                'Added an environmental RI gate requiring warm water, high moisture, low shear, a mature warm core, and sufficient organization before 30+ kt / 24 h intensification is allowed.',
+                'Added a rolling 24-hour intensification governor: ordinary setups are capped near +20 kt/day, very favorable but non-RI setups below +30 kt/day, exceptional RI up to about +45 kt/day, and rare elite setups up to about +60 kt/day.',
+                'Weakening behavior is left untouched, and the existing storm-recovery pathway now passes through the same strengthening governor so recovery cannot bypass the new pacing.'
+            ]
+        },
         {
             build: '0.12.1',
             date: BUILD_DATE,
