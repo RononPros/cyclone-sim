@@ -2,10 +2,22 @@
 // Keep this build string and changelog updated with future mod releases so the
 // main menu immediately shows whether GitHub Pages served the newest version.
 (function(){
-    const RAPTOR_MOD_BUILD = '0.9.0';
+    const RAPTOR_MOD_BUILD = '0.10.0';
     const RAPTOR_MOD_DATE = '21 Aug 2026';
 
     const CHANGELOG = [
+        {
+            build: '0.10.0',
+            date: '21 Aug 2026',
+            changes: [
+                'Retuned Normal-mode Atlantic steering with an Atlantic-specific seasonal circulation model.',
+                'Shifted the North Atlantic jet north to roughly 41-43 N in winter and 49-50 N in peak summer, with a much narrower realistic meander envelope.',
+                'Added a broad, smoothly wandering Bermuda/Azores subtropical ridge that influences both low- and upper-level steering.',
+                'Gulf, Caribbean, western-Atlantic, and recurvature flow can now vary with the position and strength of the subtropical ridge instead of following nearly uniform zonal steering.',
+                'Clamped the Atlantic trade-wind angle interpolation to its intended bounds instead of extrapolating outside the control range.',
+                'Kept steering behavior for non-Atlantic basin maps unchanged.'
+            ]
+        },
         {
             build: '0.9.0',
             date: '21 Aug 2026',
