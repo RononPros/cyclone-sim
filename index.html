@@ -11,7 +11,7 @@
     <script src="ui.js"></script>
     <script src="environment.js"></script>
     <script src="sim-mode-defs.js"></script>
-    <script src="atl-steering-tuning.js?v=0.10.0"></script>
+    <script src="atl-steering-tuning.js?v=0.12.1"></script>
     <script src="wpac-sst-tuning.js?v=0.6.0"></script>
     <script src="storm-lifecycle-tuning.js?v=0.9.0"></script>
     <script src="basin.js"></script>
@@ -21,14 +21,15 @@
     <script src="misc.js"></script>
     <script src="worker.js"></script>
     <script src="natural-spawn-toggle.js"></script>
-    <script src="mod-changelog.js?v=0.10.0"></script>
+    <script src="mod-changelog.js?v=0.12.1"></script>
     <script src="season-overview-tuning.js?v=0.7.1"></script>
     <script src="storm-delete.js?v=0.8.1"></script>
     <script src="sketch.js"></script>
     <!-- Loaded after sketch.js so it can extend the persistent Settings class before p5 setup() runs. -->
     <script src="human-risk-overlay.js?v=0.10.1"></script>
-    <!-- Loaded last so this dashboard owns the newest build marker and wraps all prior UI mods. -->
     <script src="season-details.js?v=0.11.0"></script>
+    <!-- Loaded last to own the newest build marker and reconcile changelog versions from all feature modules. -->
+    <script src="release-coordinator.js?v=0.12.1"></script>
     <link type="text/css" rel="stylesheet" href="style.css?v=0d4bafaf" />
     <link type="image/x-icon" rel="shortcut icon" href="favicon.ico" />
   </head>
