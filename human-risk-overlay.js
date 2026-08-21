@@ -2,6 +2,28 @@
 // Uses the simulator's existing land/exposure proxy plus active-cyclone hazard.
 // No external population dataset is used in this first version.
 (function(){
+    const BUILD = '0.10.0';
+    const BUILD_DATE = '21 Aug 2026';
+
+    // mod-changelog.js exposes its CHANGELOG array by reference, so this module
+    // can register its own release without duplicating the whole changelog file.
+    window.RAPTOR_MOD_BUILD = BUILD;
+    if(Array.isArray(window.RAPTOR_MOD_CHANGELOG) &&
+       !window.RAPTOR_MOD_CHANGELOG.some(r=>r.build===BUILD)){
+        window.RAPTOR_MOD_CHANGELOG.unshift({
+            build: BUILD,
+            date: BUILD_DATE,
+            changes: [
+                'Added a toggleable Human Risk Overlay to Settings.',
+                'Current risk combines the existing land/exposure proxy with active-cyclone wind, pressure, distance, and cyclone type.',
+                'Risk is displayed only over exposed land using Low / Moderate / High / Extreme heatmap colors.',
+                'The heatmap refreshes every three simulated hours and also reacts immediately to paused storm spawning/deletion.',
+                'Storm tracks, forecast tracks, and icons are redrawn above the risk layer so meteorological information stays readable.',
+                'This first version uses the simulator exposure proxy rather than an external real-world population dataset.'
+            ]
+        });
+    }
+
     // Settings are stored positionally. New settings belong at the beginning so
     // older saved arrays still line up correctly when values are popped from end.
     const baseSettingsOrder = Settings.order;
@@ -19,6 +41,51 @@
 
     UI.init = function(){
         originalUIInit.call(UI);
+
+        // Replace the older build marker/header renderers with the newest module
+        // build. The changelog body already sees the mutated array above.
+        const mainBuildMarker = mainMenu.children.find(u=>
+            u.renderFunc && u.renderFunc.toString().includes('Raptor Mod build')
+        );
+        if(mainBuildMarker){
+            mainBuildMarker.renderFunc = function(){
+                fill(COLORS.UI.text);
+                noStroke();
+                textAlign(CENTER,CENTER);
+                textStyle(NORMAL);
+                textSize(14);
+                text('Raptor Mod build ' + BUILD + '  |  Base v' + VERSION_NUMBER,0,0);
+            };
+        }
+
+        const walk = (node,pred)=>{
+            if(pred(node)) return node;
+            for(const child of node.children || []){
+                const found = walk(child,pred);
+                if(found) return found;
+            }
+        };
+        let changelogHeader;
+        for(const root of UI.elements){
+            changelogHeader = walk(root,u=>
+                u.renderFunc && u.renderFunc.toString().includes('Raptor Mod Changelog')
+            );
+            if(changelogHeader) break;
+        }
+        if(changelogHeader){
+            changelogHeader.renderFunc = function(){
+                fill(COLORS.UI.text);
+                noStroke();
+                textAlign(CENTER,CENTER);
+                textStyle(NORMAL);
+                textSize(34);
+                text('Raptor Mod Changelog',0,0);
+                textSize(15);
+                text('Current build: ' + BUILD + '  |  ' + BUILD_DATE + '  |  Base v' + VERSION_NUMBER,0,34);
+                textSize(12);
+                text('Mouse wheel to scroll',0,56);
+            };
+        }
 
         const CELL = 10;
         const UPDATE_HOURS = 3;
