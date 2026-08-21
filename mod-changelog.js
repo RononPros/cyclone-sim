@@ -2,10 +2,22 @@
 // Keep this build string and changelog updated with future mod releases so the
 // main menu immediately shows whether GitHub Pages served the newest version.
 (function(){
-    const RAPTOR_MOD_BUILD = '0.8.1';
+    const RAPTOR_MOD_BUILD = '0.9.0';
     const RAPTOR_MOD_DATE = '21 Aug 2026';
 
     const CHANGELOG = [
+        {
+            build: '0.9.0',
+            date: '21 Aug 2026',
+            changes: [
+                'Added 72-hour structural memory for established tropical cyclones that have weakened by at least 5 kt from a recent 50+ kt peak.',
+                'Established warm-core storms can now rebuild organization faster after temporary weakening when they return to warm, moist, low-shear conditions.',
+                'Favorable re-intensification uses a gentler organization^2.2 pressure-potential curve instead of the stock organization^3 recovery barrier.',
+                'Favorable re-deepening can approach roughly 6-7% per hour while ordinary hostile-condition weakening remains stock.',
+                'Folded former-TC L/remnant regeneration into the same recovery system; never-developed tropical waves still use normal genesis physics.',
+                'Kept the 18-hour weak zombie-L timeout, steering, spawning, SST climatology, and shear climatology unchanged.'
+            ]
+        },
         {
             build: '0.8.1',
             date: '21 Aug 2026',
