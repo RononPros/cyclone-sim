@@ -2,13 +2,25 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.13.0';
-    const BUILD_DATE = '21 Aug 2026';
+    const BUILD = '0.14.0';
+    const BUILD_DATE = '22 Aug 2026';
+    const PREVIOUS_DATE = '21 Aug 2026';
 
     const RELEASES = [
         {
-            build: '0.13.0',
+            build: '0.14.0',
             date: BUILD_DATE,
+            changes: [
+                'Added a persistent Storm Intensification Rate slider to Settings for Normal mode, adjustable from 25% to 125% in 5% steps.',
+                'Changed the default intensification pace to 70% of the 0.13.0 rate after continued testing showed storms were still strengthening too quickly; selecting 100% reproduces the 0.13.0 pacing.',
+                'The slider scales tropical pressure deepening, wind response, hourly pressure-change limits, and rolling 24-hour strengthening limits together across every basin map.',
+                'Rapid Intensification remains environmentally gated by warm water, moisture, low shear, warm-core structure, and organization; non-RI environments remain capped below +30 kt in 24 hours even at faster slider settings.',
+                'Weakening behavior remains unchanged, and the selected intensification rate also governs the existing storm-recovery pathway.'
+            ]
+        },
+        {
+            build: '0.13.0',
+            date: PREVIOUS_DATE,
             changes: [
                 'Retuned Normal-mode tropical cyclone intensification rates globally across every basin map.',
                 'Reduced routine pressure deepening from the stock ~5% hourly response to an effective ~2.8% baseline, with faster deepening reserved for genuinely exceptional environments.',
@@ -20,7 +32,7 @@
         },
         {
             build: '0.12.1',
-            date: BUILD_DATE,
+            date: PREVIOUS_DATE,
             changes: [
                 'Adjusted Normal-mode Caribbean steering so tropical systems gain a more realistic WNW/NW tendency while crossing the central and western Caribbean.',
                 'The poleward turn strengthens toward the western Caribbean and is strongest roughly from 15-22 N, helping more systems reach the Yucatan Channel and Gulf instead of remaining locked due west.',
@@ -31,7 +43,7 @@
         },
         {
             build: '0.12.0',
-            date: BUILD_DATE,
+            date: PREVIOUS_DATE,
             changes: [
                 'Retuned Normal-mode Atlantic steering with an Atlantic-specific seasonal circulation model.',
                 'Shifted the North Atlantic jet north to roughly 41-43 N in winter and 49-50 N in peak summer, with a much narrower realistic meander envelope.',
@@ -43,7 +55,7 @@
         },
         {
             build: '0.11.0',
-            date: BUILD_DATE,
+            date: PREVIOUS_DATE,
             changes: [
                 'Added a full-screen Season Details dashboard opened directly from the season overview.',
                 'Added Summary, Intensity, Timing, Impacts, and Monthly tabs with reconstructed season statistics from advisory records.',
@@ -56,7 +68,7 @@
         },
         {
             build: '0.10.1',
-            date: BUILD_DATE,
+            date: PREVIOUS_DATE,
             changes: [
                 'Moved the Human Risk legend higher so it no longer sits awkwardly on top of the bottom UI bar.',
                 'Increased Human Risk overlay visibility, especially for lower-risk cells, by using stronger opacity.',
@@ -65,7 +77,7 @@
         },
         {
             build: '0.10.0',
-            date: BUILD_DATE,
+            date: PREVIOUS_DATE,
             changes: [
                 'Added a toggleable Human Risk Overlay to Settings.',
                 'Current risk combines the existing land/exposure proxy with active-cyclone wind, pressure, distance, and cyclone type.',
@@ -109,9 +121,6 @@
 
     window.RAPTOR_MOD_BUILD = BUILD;
 
-    // Older late-loaded modules (Human Risk and Season Details) were written to
-    // claim the global build marker themselves. Wrap UI.init last and restore the
-    // actual newest release after all of those feature-specific wrappers run.
     const previousUIInit = UI.init;
     UI.init = function(){
         previousUIInit.call(UI);
