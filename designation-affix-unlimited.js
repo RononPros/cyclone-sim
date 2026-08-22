@@ -6,12 +6,12 @@
     UI.prototype.append = function(chain,...opts){
         const renderer = opts[4];
 
-        // In the stock designation editor these two inputs are created as
-        // [18, 6, enterFunc]. Replace only their six-character limit while
-        // leaving every other text input's validation unchanged.
-        if(Array.isArray(renderer) && renderer[1] === 6 && this.renderFunc){
-            const src = this.renderFunc.toString();
-            if(src.includes("text('Prefix:'") || src.includes("text('Suffix:'"))){
+        // Stock creates both affix inputs as [18, 6, enterFunc]. Identify them
+        // by their own save callback rather than by the parent label renderer.
+        // This keeps every unrelated six-character input unchanged.
+        if(Array.isArray(renderer) && renderer[1]===6 && renderer[2] instanceof Function){
+            const src = renderer[2].toString();
+            if(src.includes('numbering.prefix') || src.includes('numbering.suffix')){
                 opts[4] = [renderer[0], undefined, renderer[2]];
             }
         }
