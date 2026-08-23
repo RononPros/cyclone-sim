@@ -1,41 +1,73 @@
-// Raptor Mod 0.14.0: configurable global Normal-mode intensity pacing.
-// Keeps the 0.13.0 RI governor, but lets the user choose how quickly tropical
-// cyclones approach their pressure/wind potential. 100% reproduces 0.13.0.
+// Raptor Mod 0.15.0: separate configurable Normal-mode pressure/wind pacing.
+// Splits the old combined intensification slider into two direct response-rate
+// controls. Values are expressed as percent of the remaining target gap per hour.
 (function(){
-    const BUILD = '0.14.0';
-    const MIN_RATE = 25;
-    const MAX_RATE = 125;
-    const RATE_STEP = 5;
-    const DEFAULT_RATE = 70;
+    const BUILD = '0.15.0';
 
-    // Persist the new control without breaking older Settings arrays. New settings
-    // belong at the beginning so old saved values still pop into their old keys.
+    const LEGACY_COMBINED_DEFAULT = 70;
+
+    const PRESSURE_MIN = 0.50;
+    const PRESSURE_MAX = 5.00;
+    const PRESSURE_STEP = 0.01;
+    const PRESSURE_DEFAULT = 1.96; // 70% of the 0.13.0 2.8%/h baseline
+    const PRESSURE_REFERENCE = 2.80;
+
+    const WIND_MIN = 2.0;
+    const WIND_MAX = 15.0;
+    const WIND_STEP = 0.1;
+    const WIND_DEFAULT = 5.6; // 70% of the 0.13.0 8%/h baseline
+    const WIND_REFERENCE = 8.0;
+
+    // Keep the 0.14.0 combined setting as a hidden legacy slot so existing saved
+    // Settings arrays still line up correctly. New installs use the two controls.
     const baseSettingsOrder = Settings.order;
     const baseSettingsDefaults = Settings.defaults;
     Settings.order = function(){
         const order = baseSettingsOrder.call(Settings);
-        return order.includes('intensityRate') ? order : ['intensityRate', ...order];
+        const extras = [];
+        if(!order.includes('windIntensificationRate')) extras.push('windIntensificationRate');
+        if(!order.includes('pressureDeepeningRate')) extras.push('pressureDeepeningRate');
+        if(!order.includes('intensityRate')) extras.push('intensityRate');
+        return [...extras, ...order];
     };
     Settings.defaults = function(){
         const defaults = baseSettingsDefaults.call(Settings);
-        const oldOrder = baseSettingsOrder.call(Settings);
-        return oldOrder.includes('intensityRate') ? defaults : [DEFAULT_RATE, ...defaults];
+        const order = baseSettingsOrder.call(Settings);
+        const extras = [];
+        if(!order.includes('windIntensificationRate')) extras.push(WIND_DEFAULT);
+        if(!order.includes('pressureDeepeningRate')) extras.push(PRESSURE_DEFAULT);
+        if(!order.includes('intensityRate')) extras.push(LEGACY_COMBINED_DEFAULT);
+        return [...extras, ...defaults];
     };
 
-    const ratePercent = ()=>{
-        let v = Number(simSettings && simSettings.intensityRate);
-        if(!Number.isFinite(v)) v = DEFAULT_RATE;
-        v = constrain(v,MIN_RATE,MAX_RATE);
-        return round(v/RATE_STEP)*RATE_STEP;
+    const snap = (v,min,max,step,decimals)=>{
+        v = constrain(Number(v),min,max);
+        v = round(v/step)*step;
+        return Number(v.toFixed(decimals));
     };
-    const rateFactor = ()=>ratePercent()/100;
+
+    const pressureRate = ()=>{
+        let v = Number(simSettings && simSettings.pressureDeepeningRate);
+        if(!Number.isFinite(v)) v = PRESSURE_DEFAULT;
+        return snap(v,PRESSURE_MIN,PRESSURE_MAX,PRESSURE_STEP,2);
+    };
+
+    const windRate = ()=>{
+        let v = Number(simSettings && simSettings.windIntensificationRate);
+        if(!Number.isFinite(v)) v = WIND_DEFAULT;
+        return snap(v,WIND_MIN,WIND_MAX,WIND_STEP,1);
+    };
+
+    const pressureFactor = ()=>pressureRate()/PRESSURE_REFERENCE;
+    const windFactor = ()=>windRate()/WIND_REFERENCE;
 
     // -------------------------------------------------------------------------
-    // Settings slider
+    // Settings sliders
     // -------------------------------------------------------------------------
     const previousUIInit = UI.init;
-    let intensitySlider;
-    let draggingSlider = false;
+    let pressureSlider;
+    let windSlider;
+    let draggingSlider;
 
     const sliderBounds = el=>({
         left: el.getX(),
@@ -44,34 +76,85 @@
         bottom: el.getY()+el.height
     });
 
-    const mouseInSlider = ()=>{
-        if(!intensitySlider || !settingsMenu || !settingsMenu.showing) return false;
-        const b = sliderBounds(intensitySlider);
-        const x = getMouseX();
-        const y = getMouseY();
-        return x>=b.left && x<b.right && y>=b.top && y<b.bottom;
+    const descriptorFor = el=>{
+        if(el===pressureSlider){
+            return {
+                key: 'pressureDeepeningRate',
+                min: PRESSURE_MIN,
+                max: PRESSURE_MAX,
+                step: PRESSURE_STEP,
+                decimals: 2
+            };
+        }
+        if(el===windSlider){
+            return {
+                key: 'windIntensificationRate',
+                min: WIND_MIN,
+                max: WIND_MAX,
+                step: WIND_STEP,
+                decimals: 1
+            };
+        }
     };
 
-    const setRateFromMouse = save=>{
-        if(!intensitySlider || !simSettings) return;
+    const sliderUnderMouse = ()=>{
+        if(!settingsMenu || !settingsMenu.showing) return;
+        const x = getMouseX();
+        const y = getMouseY();
+        for(const el of [pressureSlider,windSlider]){
+            if(!el) continue;
+            const b = sliderBounds(el);
+            if(x>=b.left && x<b.right && y>=b.top && y<b.bottom) return el;
+        }
+    };
+
+    const setSliderFromMouse = (el,save)=>{
+        const d = descriptorFor(el);
+        if(!d || !simSettings) return;
         const trackLeft = 12;
-        const trackRight = intensitySlider.width-12;
-        const localX = constrain(getMouseX()-intensitySlider.getX(),trackLeft,trackRight);
-        let value = map(localX,trackLeft,trackRight,MIN_RATE,MAX_RATE);
-        value = constrain(round(value/RATE_STEP)*RATE_STEP,MIN_RATE,MAX_RATE);
-        if(simSettings.intensityRate!==value){
-            simSettings.intensityRate = value;
+        const trackRight = el.width-12;
+        const localX = constrain(getMouseX()-el.getX(),trackLeft,trackRight);
+        let value = map(localX,trackLeft,trackRight,d.min,d.max);
+        value = snap(value,d.min,d.max,d.step,d.decimals);
+        if(simSettings[d.key]!==value){
+            simSettings[d.key] = value;
             if(save) simSettings.save();
         }else if(save){
             simSettings.save();
         }
     };
 
+    const renderSlider = (el,s,label,value,min,max,decimals)=>{
+        if(el.isHovered()){
+            fill(COLORS.UI.buttonHover);
+            noStroke();
+            s.fullRect();
+        }
+
+        const trackLeft = 12;
+        const trackRight = el.width-12;
+        const trackY = 24;
+        const knobX = map(value,min,max,trackLeft,trackRight,true);
+
+        fill(COLORS.UI.text);
+        noStroke();
+        textAlign(CENTER,TOP);
+        textStyle(NORMAL);
+        textSize(14);
+        text(label+': '+value.toFixed(decimals)+'% gap/hr',el.width/2,0);
+
+        stroke(COLORS.UI.nonSelectedInput);
+        strokeWeight(4);
+        line(trackLeft,trackY,trackRight,trackY);
+        stroke(COLORS.UI.text);
+        strokeWeight(9);
+        point(knobX,trackY);
+        strokeWeight(1);
+    };
+
     UI.init = function(){
         previousUIInit.call(UI);
 
-        // Human Risk already compacts the stock Settings chain. Reflow it once
-        // more to a 30 px pitch so the slider fits cleanly above Back.
         const firstSetting = settingsMenu.children.find(u=>
             u.width===300 && u.height===30 &&
             u.relX===WIDTH/2-150 && u.relY<HEIGHT/2 &&
@@ -89,55 +172,35 @@
                 );
             }
 
-            for(let i=1;i<chain.length;i++) chain[i].relY = 30;
+            // Ten regular settings buttons need to leave room for two compact sliders.
+            for(let i=1;i<chain.length;i++) chain[i].relY = 27;
 
             const last = chain[chain.length-1];
-            intensitySlider = last.append(false,0,30,300,38,function(s){
-                if(this.isHovered()){
-                    fill(COLORS.UI.buttonHover);
-                    noStroke();
-                    s.fullRect();
-                }
-
-                const value = ratePercent();
-                const trackLeft = 12;
-                const trackRight = this.width-12;
-                const trackY = 27;
-                const knobX = map(value,MIN_RATE,MAX_RATE,trackLeft,trackRight,true);
-
-                fill(COLORS.UI.text);
-                noStroke();
-                textAlign(CENTER,TOP);
-                textStyle(NORMAL);
-                textSize(15);
-                text('Storm Intensification Rate: '+value+'%',this.width/2,1);
-
-                stroke(COLORS.UI.nonSelectedInput);
-                strokeWeight(4);
-                line(trackLeft,trackY,trackRight,trackY);
-
-                stroke(COLORS.UI.text);
-                strokeWeight(9);
-                point(knobX,trackY);
-                strokeWeight(1);
+            pressureSlider = last.append(false,0,30,300,34,function(s){
+                renderSlider(this,s,'Pressure Deepening',pressureRate(),PRESSURE_MIN,PRESSURE_MAX,2);
             },function(){
-                setRateFromMouse(true);
+                setSliderFromMouse(pressureSlider,true);
+            });
+
+            windSlider = pressureSlider.append(false,0,36,300,34,function(s){
+                renderSlider(this,s,'Wind Intensification',windRate(),WIND_MIN,WIND_MAX,1);
+            },function(){
+                setSliderFromMouse(windSlider,true);
             });
         }else{
             console.warn('Raptor intensity-rate tuning: Settings chain not found');
         }
     };
 
-    // Give the custom slider normal drag behavior. While dragging, update live;
-    // save once on release instead of hammering IndexedDB every mousemove.
     const previousMousePressed = window.mousePressed;
     const previousMouseDragged = window.mouseDragged;
     const previousMouseReleased = window.mouseReleased;
 
     window.mousePressed = function(event){
-        if(mouseInSlider()){
-            draggingSlider = true;
-            setRateFromMouse(false);
+        const el = sliderUnderMouse();
+        if(el){
+            draggingSlider = el;
+            setSliderFromMouse(el,false);
             return false;
         }
         if(previousMousePressed instanceof Function)
@@ -146,7 +209,7 @@
 
     window.mouseDragged = function(event){
         if(draggingSlider){
-            setRateFromMouse(false);
+            setSliderFromMouse(draggingSlider,false);
             return false;
         }
         if(previousMouseDragged instanceof Function)
@@ -155,8 +218,8 @@
 
     window.mouseReleased = function(event){
         if(draggingSlider){
-            setRateFromMouse(false);
-            draggingSlider = false;
+            setSliderFromMouse(draggingSlider,false);
+            draggingSlider = undefined;
             if(simSettings) simSettings.save();
             return false;
         }
@@ -193,9 +256,6 @@
         const proposedPressure = sys.pressure;
         const proposedWind = sys.windSpeed;
         const tropicalLike = sys.type===TROP || sys.type===SUBTROP || sys.type===TROPWAVE;
-
-        // Leave extratropical intensity changes alone. This control is specifically
-        // for tropical-cyclone strengthening pacing in Normal mode.
         if(!tropicalLike) return;
 
         const lnd = u.land();
@@ -208,7 +268,6 @@
             sys.lowerWarmCore>=0.72 && sys.upperWarmCore>=0.62 &&
             sys.organization>=0.48;
 
-        // RI remains environmentally gated regardless of slider position.
         const exceptionalRI = !lnd &&
             SST>=28.0 && moisture>=0.60 && shear<=2.5 &&
             sys.lowerWarmCore>=0.82 && sys.upperWarmCore>=0.72 &&
@@ -219,12 +278,11 @@
             sys.lowerWarmCore>=0.94 && sys.upperWarmCore>=0.88 &&
             sys.organization>=0.84;
 
-        const factor = rateFactor();
+        const pFactor = pressureFactor();
+        const wFactor = windFactor();
 
-        // --- Pressure pacing --------------------------------------------------
-        // At 100%, these are exactly the 0.13.0 rates. The new default is 70%,
-        // making routine deepening ~1.96% of the potential-pressure gap per hour
-        // instead of ~2.8%. Weakening remains untouched.
+        // Pressure slider controls only pressure deepening and its hourly absolute
+        // safety cap. At the default 1.96% gap/hr this is exactly 0.14.0's 70% pace.
         if(proposedPressure < pressureBefore){
             let pressureScale = 0.56;
             let hourlyPressureCap = 1.35;
@@ -241,42 +299,36 @@
                 hourlyPressureCap = 3.0;
             }
 
-            pressureScale = min(pressureScale*factor,1);
-            hourlyPressureCap *= factor;
+            pressureScale = min(pressureScale*pFactor,1);
+            hourlyPressureCap *= pFactor;
 
             const proposedDrop = pressureBefore-proposedPressure;
             const pacedDrop = min(proposedDrop*pressureScale,hourlyPressureCap);
             sys.pressure = pressureBefore-pacedDrop;
         }
 
-        // --- Wind pacing ------------------------------------------------------
+        // Wind slider controls only strengthening toward the pressure-derived wind
+        // target and the rolling 24-hour wind-gain ceiling. Weakening is untouched.
         if(proposedWind > windBefore){
-            let windRate = 0.08;
-            if(veryFavorable) windRate = 0.09;
-            if(exceptionalRI) windRate = 0.11;
-            if(eliteRI) windRate = 0.13;
-            windRate = min(windRate*factor,0.15);
+            let tierMultiplier = 1;
+            if(veryFavorable) tierMultiplier = 0.09/0.08;
+            if(exceptionalRI) tierMultiplier = 0.11/0.08;
+            if(eliteRI) tierMultiplier = 0.13/0.08;
+            const hourlyWindRate = min((windRate()/100)*tierMultiplier,0.15);
 
             const targetWind = map(sys.pressure,1030,900,1,160)*
                 map(sys.lowerWarmCore,1,0,1,0.6);
             let pacedWind = targetWind>windBefore ?
-                lerp(windBefore,targetWind,windRate) : windBefore;
-
-            // The slider is still a governor. Even above 100%, it cannot exceed
-            // the strengthening that the underlying storm physics proposed.
+                lerp(windBefore,targetWind,hourlyWindRate) : windBefore;
             pacedWind = min(pacedWind,proposedWind);
 
-            // --- 24-hour RI governor -----------------------------------------
-            // Non-RI environments stay below +30 kt/day at every slider setting.
-            // Exceptional/elite setups scale with the slider and can cross the RI
-            // threshold when conditions and the selected pacing both allow it.
             const storm = sys.fetchStorm();
             const wind24 = findWind24HoursAgo(storm,sys.basin.tick);
             if(wind24!==undefined){
-                let maxGain24 = min(29,20*factor);
-                if(veryFavorable) maxGain24 = min(29,29*factor);
-                if(exceptionalRI) maxGain24 = 45*factor;
-                if(eliteRI) maxGain24 = min(70,60*factor);
+                let maxGain24 = min(29,20*wFactor);
+                if(veryFavorable) maxGain24 = min(29,29*wFactor);
+                if(exceptionalRI) maxGain24 = 45*wFactor;
+                if(eliteRI) maxGain24 = min(70,60*wFactor);
                 const ceiling = wind24+maxGain24;
                 pacedWind = min(pacedWind,max(windBefore,ceiling));
             }
@@ -287,17 +339,21 @@
 
     window.__raptorIntensityRateTuning = {
         build: BUILD,
-        minRate: MIN_RATE,
-        maxRate: MAX_RATE,
-        step: RATE_STEP,
-        defaultRate: DEFAULT_RATE,
-        get rate(){ return ratePercent(); },
-        get factor(){ return rateFactor(); },
-        baselinePressureScaleAt100: 0.56,
-        baselineWindRateAt100: 0.08,
-        ordinary24hGainCapAt100: 20,
-        veryFavorable24hGainCapAt100: 29,
-        exceptional24hGainCapAt100: 45,
-        elite24hGainCapAt100: 60
+        pressure: {
+            min: PRESSURE_MIN,
+            max: PRESSURE_MAX,
+            step: PRESSURE_STEP,
+            default: PRESSURE_DEFAULT,
+            get rate(){ return pressureRate(); }
+        },
+        wind: {
+            min: WIND_MIN,
+            max: WIND_MAX,
+            step: WIND_STEP,
+            default: WIND_DEFAULT,
+            get rate(){ return windRate(); }
+        },
+        get pressureFactor(){ return pressureFactor(); },
+        get windFactor(){ return windFactor(); }
     };
 })();
