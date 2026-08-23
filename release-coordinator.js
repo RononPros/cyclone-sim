@@ -2,12 +2,26 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.15.0';
+    const BUILD = '0.16.0';
     const BUILD_DATE = '23 Aug 2026';
-    const PREVIOUS_DATE = '22 Aug 2026';
-    const OLDER_DATE = '21 Aug 2026';
+    const DATE_22 = '22 Aug 2026';
+    const DATE_21 = '21 Aug 2026';
 
     const RELEASES = [
+        {
+            build: '0.16.0',
+            date: BUILD_DATE,
+            changes: [
+                'Added a persistent Storm Debug Mode toggle to Settings with a live diagnostics panel for the selected active storm.',
+                'Added core-state diagnostics for pressure, wind, organization, depth, lower/upper warm core, current classification, peak intensity, ACE, storm age, and impact totals.',
+                'Added live Normal-mode pressure/wind targets, target gaps, configured and actually applied intensification rates, hourly pressure caps, rolling 24-hour wind caps, and 1/6/12/24-hour intensity changes.',
+                'Added environmental diagnostics for SST, moisture, environmental and interaction shear, land/ocean state, jet-relative position, and a heuristic likely-limiter readout.',
+                'Added explicit Very Favorable, RI Eligible, and Elite RI status plus per-condition RI gate checks for SST, moisture, shear, warm-core structure, and organization.',
+                'Added recovery diagnostics including recovery pathway state, favorability, 72-hour structural-memory time remaining, and weak-low timeout state.',
+                'Added low-level, upper-level, blended/final steering, Fujiwhara interaction, LL/UL depth weights, live coordinates, sampled land/ocean exposure time, and internal lifecycle flags.',
+                'Debug instrumentation is observational only and does not alter storm physics, steering, lifecycle, or environmental fields.'
+            ]
+        },
         {
             build: '0.15.0',
             date: BUILD_DATE,
@@ -22,7 +36,7 @@
         },
         {
             build: '0.14.0',
-            date: PREVIOUS_DATE,
+            date: DATE_22,
             changes: [
                 'Added a persistent Storm Intensification Rate slider to Settings for Normal mode, adjustable from 25% to 125% in 5% steps.',
                 'Changed the default intensification pace to 70% of the 0.13.0 rate after continued testing showed storms were still strengthening too quickly; selecting 100% reproduces the 0.13.0 pacing.',
@@ -33,7 +47,7 @@
         },
         {
             build: '0.13.0',
-            date: OLDER_DATE,
+            date: DATE_21,
             changes: [
                 'Retuned Normal-mode tropical cyclone intensification rates globally across every basin map.',
                 'Reduced routine pressure deepening from the stock ~5% hourly response to an effective ~2.8% baseline, with faster deepening reserved for genuinely exceptional environments.',
@@ -45,7 +59,7 @@
         },
         {
             build: '0.12.1',
-            date: OLDER_DATE,
+            date: DATE_21,
             changes: [
                 'Adjusted Normal-mode Caribbean steering so tropical systems gain a more realistic WNW/NW tendency while crossing the central and western Caribbean.',
                 'The poleward turn strengthens toward the western Caribbean and is strongest roughly from 15-22 N, helping more systems reach the Yucatan Channel and Gulf instead of remaining locked due west.',
@@ -56,7 +70,7 @@
         },
         {
             build: '0.12.0',
-            date: OLDER_DATE,
+            date: DATE_21,
             changes: [
                 'Retuned Normal-mode Atlantic steering with an Atlantic-specific seasonal circulation model.',
                 'Shifted the North Atlantic jet north to roughly 41-43 N in winter and 49-50 N in peak summer, with a much narrower realistic meander envelope.',
@@ -68,7 +82,7 @@
         },
         {
             build: '0.11.0',
-            date: OLDER_DATE,
+            date: DATE_21,
             changes: [
                 'Added a full-screen Season Details dashboard opened directly from the season overview.',
                 'Added Summary, Intensity, Timing, Impacts, and Monthly tabs with reconstructed season statistics from advisory records.',
@@ -81,7 +95,7 @@
         },
         {
             build: '0.10.1',
-            date: OLDER_DATE,
+            date: DATE_21,
             changes: [
                 'Moved the Human Risk legend higher so it no longer sits awkwardly on top of the bottom UI bar.',
                 'Increased Human Risk overlay visibility, especially for lower-risk cells, by using stronger opacity.',
@@ -90,7 +104,7 @@
         },
         {
             build: '0.10.0',
-            date: OLDER_DATE,
+            date: DATE_21,
             changes: [
                 'Added a toggleable Human Risk Overlay to Settings.',
                 'Current risk combines the existing land/exposure proxy with active-cyclone wind, pressure, distance, and cyclone type.',
