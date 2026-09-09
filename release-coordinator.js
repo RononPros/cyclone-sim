@@ -2,13 +2,26 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.17.1';
+    const BUILD = '0.17.2';
     const BUILD_DATE = '9 Sep 2026';
     const DATE_23 = '23 Aug 2026';
     const DATE_22 = '22 Aug 2026';
     const DATE_21 = '21 Aug 2026';
 
     const RELEASES = [
+        {
+            build: '0.17.2',
+            date: BUILD_DATE,
+            changes: [
+                'Added a 36-hour environment-gated genesis assist to manually spawned God Mode Lows only.',
+                'Manual Lows in warm, moist, low-shear ocean environments now consolidate organization faster toward the existing TD threshold.',
+                'Limited the stock weak-wave pressure-rise bias during the assist so favorable manual Lows no longer commonly drift from roughly 1012 hPa toward 1020 hPa before developing.',
+                'Added a modest pre-TD pressure and wind response so favorable manual Lows can begin deepening within hours instead of crossing much of an ocean first.',
+                'The assist expires with simulated time, stops immediately after tropical development, and provides no boost over land, cool water, dry air, or strong shear.',
+                'Natural tropical waves remain completely unflagged, so natural spawn climatology and ordinary genesis physics are unchanged.',
+                'The manual-Low assist timer is persisted in current saves and applies consistently across simulation modes.'
+            ]
+        },
         {
             build: '0.17.1',
             date: BUILD_DATE,
