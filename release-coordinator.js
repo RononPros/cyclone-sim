@@ -2,13 +2,23 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.17.0';
+    const BUILD = '0.17.1';
     const BUILD_DATE = '9 Sep 2026';
     const DATE_23 = '23 Aug 2026';
     const DATE_22 = '22 Aug 2026';
     const DATE_21 = '21 Aug 2026';
 
     const RELEASES = [
+        {
+            build: '0.17.1',
+            date: BUILD_DATE,
+            changes: [
+                'Retuned the manually spawned God Mode Low so it can begin strengthening sooner in favorable environments.',
+                'God Mode Low initial state changed from 1015 hPa / 15 kt / 0.20 organization to 1012 hPa / 20 kt / 0.35 organization.',
+                'Natural tropical-wave spawning, global cyclone physics, intensification limits, and Calm-mode climatology are unchanged.',
+                'Applied the same manual Low starting-state tuning to Experimental mode while preserving its extra kaboom state.'
+            ]
+        },
         {
             build: '0.17.0',
             date: BUILD_DATE,
