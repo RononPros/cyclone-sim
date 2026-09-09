@@ -2,15 +2,30 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.16.0';
-    const BUILD_DATE = '23 Aug 2026';
+    const BUILD = '0.17.0';
+    const BUILD_DATE = '9 Sep 2026';
+    const DATE_23 = '23 Aug 2026';
     const DATE_22 = '22 Aug 2026';
     const DATE_21 = '21 Aug 2026';
 
     const RELEASES = [
         {
-            build: '0.16.0',
+            build: '0.17.0',
             date: BUILD_DATE,
+            changes: [
+                'Added Calm simulation mode as a lower-activity alternative to Normal.',
+                'Reduced tropical-wave spawning by roughly 50% while preserving the normal seasonal cycle.',
+                'Reduced extratropical seed-system spawning for quieter overall seasons.',
+                'Lowered Calm-mode tropical SST climatology by about 1 C compared with Normal and slightly cooled the polar profile.',
+                'Reduced background atmospheric moisture so marginal disturbances struggle more often.',
+                'Increased effective environmental wind shear by 10% without changing storm steering vectors or tracks directly.',
+                'Calm inherits the currently tuned Normal-mode storm lifecycle, recovery, steering, and environmental hooks instead of duplicating older cyclone physics.',
+                'Appended Calm after the existing simulation modes so saved numeric mode IDs remain compatible.'
+            ]
+        },
+        {
+            build: '0.16.0',
+            date: DATE_23,
             changes: [
                 'Added a persistent Storm Debug Mode toggle to Settings with a live diagnostics panel for the selected active storm.',
                 'Added core-state diagnostics for pressure, wind, organization, depth, lower/upper warm core, current classification, peak intensity, ACE, storm age, and impact totals.',
@@ -24,7 +39,7 @@
         },
         {
             build: '0.15.0',
-            date: BUILD_DATE,
+            date: DATE_23,
             changes: [
                 'Split the combined Storm Intensification Rate control into separate Pressure Deepening and Wind Intensification sliders for Normal mode.',
                 'Both sliders now use direct response units: percent of the remaining pressure or wind target gap closed per simulated hour.',
@@ -41,7 +56,7 @@
                 'Added a persistent Storm Intensification Rate slider to Settings for Normal mode, adjustable from 25% to 125% in 5% steps.',
                 'Changed the default intensification pace to 70% of the 0.13.0 rate after continued testing showed storms were still strengthening too quickly; selecting 100% reproduces the 0.13.0 pacing.',
                 'The slider scales tropical pressure deepening, wind response, hourly pressure-change limits, and rolling 24-hour strengthening limits together across every basin map.',
-                'Rapid Intensification remains environmentally gated by warm water, moisture, low shear, warm-core structure, and organization; non-RI environments remain capped below +30 kt in 24 hours even at faster slider settings.',
+                'Rapid Intensification remains environmentally gated by warm water, moisture, low shear, a mature warm core, and sufficient organization; non-RI environments remain capped below +30 kt in 24 hours even at faster slider settings.',
                 'Weakening behavior remains unchanged, and the selected intensification rate also governs the existing storm-recovery pathway.'
             ]
         },
