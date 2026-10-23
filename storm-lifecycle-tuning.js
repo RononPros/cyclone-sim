@@ -2,7 +2,7 @@
 // Established tropical cyclones now retain short-term structural memory and can
 // re-intensify after temporary weakening when they return to genuinely favorable
 // warm, moist, low-shear conditions. Genesis and hostile-condition weakening are
-// still handled by the stock Normal-mode physics.
+// still handled by the shared core physics, including circulation land exposure.
 (function(){
     const originalNormalCore = STORM_ALGORITHM.defaults.core;
 
@@ -15,7 +15,7 @@
         originalNormalCore(sys,u);
         if(sys.kill) return;
 
-        const lnd = u.land();
+        const exposure = LandInteraction.read(sys);
         const SST = u.f('SST');
         const moisture = u.f('moisture');
         const shear = u.f('shear').mag() + sys.interaction.shear;
@@ -56,11 +56,11 @@
         const sstFactor = map(SST,26.0,29.5,0,1,true);
         const moistureFactor = map(moisture,0.42,0.72,0,1,true);
         const shearFactor = map(shear,5.0,1.0,0,1,true);
-        const favorability = sstFactor *
+        const favorability = exposure.oceanSupport * sstFactor *
             (0.25 + 0.75*moistureFactor) *
             (0.15 + 0.85*shearFactor);
 
-        const recoveryPotential = !lnd && warmStructure &&
+        const recoveryPotential = exposure.oceanSupport>=0.5 && warmStructure &&
             (establishedRecovery || remnantRecovery) &&
             SST >= 27 && moisture >= 0.42 && shear <= 5.0 && favorability >= 0.12;
 
@@ -80,13 +80,13 @@
                 organizationRate = 0.006 + 0.014*favorability + 0.003*intensityMemory;
             }
             if(sys.organization < organizationTarget)
-                sys.organization = lerp(sys.organization,organizationTarget,organizationRate);
+                sys.organization = lerp(sys.organization,organizationTarget,organizationRate*exposure.oceanSupport);
 
             // The stock pressure potential uses organization^3. During genuine
             // re-intensification, use a gentler structural-memory curve so a
             // moderately weakened cyclone is not forced to redevelop from zero.
             // Remnants retain the slightly gentler ^2.0 curve from build 0.5.
-            const potentialPressure = 1010 - 25*log(map(SST,25,30,1,2,true))/log(1.17);
+            const potentialPressure = LandInteraction.pressurePotential(SST,exposure,true);
             const exponent = establishedRecovery ? 2.2 : 2.0;
             const recoveryTarget = lerp(1010,potentialPressure,pow(sys.organization,exponent));
 
@@ -131,3 +131,4 @@
         }
     };
 })();
+

@@ -145,8 +145,8 @@
         const sstFactor = mapRange(sample.SST,26.0,29.5,0,1,true);
         const moistureFactor = mapRange(sample.moisture,0.42,0.72,0,1,true);
         const shearFactor = mapRange(sample.totalShear,5.0,1.0,0,1,true);
-        const favorability = sstFactor*(0.25+0.75*moistureFactor)*(0.15+0.85*shearFactor);
-        const active = !sample.onLand && warmStructure && (established || remnant) &&
+        const favorability = sample.landInteraction.oceanSupport*sstFactor*(0.25+0.75*moistureFactor)*(0.15+0.85*shearFactor);
+        const active = sample.landInteraction.oceanSupport>=0.5 && warmStructure && (established || remnant) &&
             sample.SST>=27 && sample.moisture>=0.42 && sample.totalShear<=5 && favorability>=0.12;
 
         return {
@@ -162,13 +162,16 @@
 
     const environmentTier = (sys,sample)=>{
         if(!sample) return {veryFavorable:false,exceptionalRI:false,eliteRI:false};
-        const veryFavorable = !sample.onLand &&
+        const influence = sample.landInteraction.influence;
+        const limits = LandInteraction.maxInfluence;
+        const veryFavorable = influence<=limits.veryFavorable &&
             sample.SST>=27.3 && sample.moisture>=0.52 && sample.totalShear<=3.5 &&
             sys.lowerWarmCore>=0.72 && sys.upperWarmCore>=0.62 && sys.organization>=0.48;
-        const exceptionalRI = !sample.onLand &&
+        const exceptionalRI = influence<=limits.exceptionalRI &&
             sample.SST>=28.0 && sample.moisture>=0.60 && sample.totalShear<=2.5 &&
             sys.lowerWarmCore>=0.82 && sys.upperWarmCore>=0.72 && sys.organization>=0.62;
         const eliteRI = exceptionalRI &&
+            influence<=limits.eliteRI &&
             sample.SST>=29.2 && sample.moisture>=0.72 && sample.totalShear<=1.2 &&
             sys.lowerWarmCore>=0.94 && sys.upperWarmCore>=0.88 && sys.organization>=0.84;
         return {veryFavorable,exceptionalRI,eliteRI};
@@ -177,18 +180,19 @@
     const normalTargets = (sys,sample,recovery)=>{
         if(!sample || sys.basin.actMode!==SIM_MODE_NORMAL) return null;
         const SST = sample.SST;
-        const oceanPotential = 1010 - 25*Math.log((sample.onLand || SST<25) ? 1 : mapRange(SST,25,30,1,2,false))/Math.log(1.17);
-        const standardPressure = mix(1010,oceanPotential,Math.pow(sys.organization,3));
+        const oceanPotential = LandInteraction.pressurePotential(SST,{oceanSupport:1});
+        const landPotential = LandInteraction.pressurePotential(SST,sample.landInteraction);
+        const standardPressure = mix(1010,landPotential,Math.pow(sys.organization,3));
 
         let recoveryPressure;
         if(recovery && recovery.active){
             const exponent = recovery.established ? 2.2 : 2.0;
-            recoveryPressure = mix(1010,oceanPotential,Math.pow(sys.organization,exponent));
+            recoveryPressure = mix(1010,LandInteraction.pressurePotential(SST,sample.landInteraction,true),Math.pow(sys.organization,exponent));
         }
 
         const pressure = recoveryPressure===undefined ? standardPressure : Math.min(standardPressure,recoveryPressure);
         const wind = mapRange(sys.pressure,1030,900,1,160,false)*mapRange(sys.lowerWarmCore,1,0,1,0.6,false);
-        return {oceanPotential,standardPressure,recoveryPressure,pressure,wind};
+        return {oceanPotential,landPotential,standardPressure,recoveryPressure,pressure,wind};
     };
 
     const configuredPacing = (tier)=>{
@@ -227,6 +231,7 @@
         if(sys.type===EXTROP) return 'EXTRATROPICAL STRUCTURE';
 
         const candidates = [
+            ['LAND INTERACTION',clamp(sample.landInteraction.influence/0.6,0,1.5)],
             ['SHEAR',clamp((sample.totalShear-2.0)/4.0,0,1.5)],
             ['DRY AIR',clamp((0.60-sample.moisture)/0.30,0,1.5)],
             ['SST',clamp((28.0-sample.SST)/4.0,0,1.5)],
@@ -285,7 +290,8 @@
             jetY: Number(jetY),
             jetRelative: finite(jetY) ? basin.hemY(sys.pos.y)-Number(jetY) : NaN,
             onLand,
-            landValue
+            landValue,
+            landInteraction:LandInteraction.read(sys)
         };
     };
 
@@ -576,3 +582,4 @@
         likelyLimiter
     };
 })();
+

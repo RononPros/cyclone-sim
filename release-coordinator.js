@@ -2,16 +2,31 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.17.2';
-    const BUILD_DATE = '9 Sep 2026';
+    const BUILD = '0.18.0';
+    const BUILD_DATE = '23 Oct 2026';
+    const DATE_SEP_9 = '9 Sep 2026';
     const DATE_23 = '23 Aug 2026';
     const DATE_22 = '22 Aug 2026';
     const DATE_21 = '21 Aug 2026';
 
     const RELEASES = [
         {
-            build: '0.17.2',
+            build: BUILD,
             date: BUILD_DATE,
+            changes: [
+                'Added weighted land sampling across 0-50, 50-100 and 100-200 km zones, with 60%, 30% and 10% weights.',
+                'Nearby land now gradually reduces ocean energy support and organization before the storm centre crosses the coast; extensive inland exposure removes ocean support.',
+                'Land influence adjusts over three simulated hours, so coastal brushes, sustained exposure, landfall and return offshore produce continuous intensity responses.',
+                'Recovery, rapid-intensification tiers and manual-Low assistance now use the same land influence instead of the centre-only land check.',
+                'Added land coverage, effective influence, per-zone coverage, exposure duration and land-adjusted pressure potential to Storm Debug.',
+                'Land influence and exposure duration persist in existing save-format records; older saves initialize from their current storm footprints.',
+                'Reduced Eastern and Western Pacific tropical-belt shear to approximately Normal Atlantic magnitudes, calibrated across seeds and seasons while preserving steering and shear direction.',
+                'Calm now inherits the Pacific shear correction before applying its own 10% magnitude increase.'
+            ]
+        },
+        {
+            build: '0.17.2',
+            date: DATE_SEP_9,
             changes: [
                 'Added a 36-hour environment-gated genesis assist to manually spawned God Mode Lows only.',
                 'Manual Lows in warm, moist, low-shear ocean environments now consolidate organization faster toward the existing TD threshold.',
@@ -24,7 +39,7 @@
         },
         {
             build: '0.17.1',
-            date: BUILD_DATE,
+            date: DATE_SEP_9,
             changes: [
                 'Retuned the manually spawned God Mode Low so it can begin strengthening sooner in favorable environments.',
                 'God Mode Low initial state changed from 1015 hPa / 15 kt / 0.20 organization to 1012 hPa / 20 kt / 0.35 organization.',
@@ -34,7 +49,7 @@
         },
         {
             build: '0.17.0',
-            date: BUILD_DATE,
+            date: DATE_SEP_9,
             changes: [
                 'Added Calm simulation mode as a lower-activity alternative to Normal.',
                 'Reduced tropical-wave spawning by roughly 50% while preserving the normal seasonal cycle.',
@@ -238,3 +253,4 @@
         }
     };
 })();
+
