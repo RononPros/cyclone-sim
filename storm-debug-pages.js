@@ -254,7 +254,7 @@
                 yL = row(leftX,yL,'Pressure',num(sys.pressure,1,' hPa'));
                 yL = row(leftX,yL,'Pressure target',targets ? num(targets.pressure,1,' hPa') : 'N/A outside Normal');
                 yL = row(leftX,yL,'Pressure target gap',targets ? signed(targets.pressure-sys.pressure,1,' hPa') : 'N/A');
-                yL = row(leftX,yL,'Ocean potential',targets ? num(targets.oceanPotential,1,' hPa') : 'N/A');
+                yL = row(leftX,yL,'Ocean / land potential',targets ? num(targets.oceanPotential,1)+' / '+num(targets.landPotential,1,' hPa') : 'N/A');
                 yL = row(leftX,yL,'Organization',pct(sys.organization,1));
                 yL = row(leftX,yL,'Depth',pct(sys.depth,1));
                 yL = row(leftX,yL,'Lower warm core',pct(sys.lowerWarmCore,1));
@@ -284,8 +284,11 @@
                 yR = row(rightX,yR,'Environmental shear',num(sample && sample.envShear,2,' u/hr'));
                 yR = row(rightX,yR,'Interaction shear',num(sample && sample.interactionShear,2,' u/hr'));
                 yR = row(rightX,yR,'Total shear',num(sample && sample.totalShear,2,' u/hr'));
-                yR = row(rightX,yR,'Surface',sample && sample.onLand ? 'LAND' : 'OCEAN');
-                yR = row(rightX,yR,'Land value',num(sample && sample.landValue,3));
+                yR = row(rightX,yR,'Surface / land value',(sample && sample.onLand ? 'LAND' : 'OCEAN')+' / '+num(sample && sample.landValue,3));
+                const landState = sample && sample.landInteraction;
+                yR = row(rightX,yR,'Land coverage / influence',landState ? pct(landState.coverage,1)+' / '+pct(landState.influence,1) : 'N/A');
+                yR = row(rightX,yR,'Inner / middle / outer',landState ? landState.bands.map(v=>pct(v,0)).join(' / ') : 'N/A');
+                yR = row(rightX,yR,'Land exposure',landState ? num(landState.exposureHours,0,' h') : 'N/A');
                 yR = row(rightX,yR,'Jet relative',num(sample && sample.jetRelative,1,' px'));
                 yR = row(rightX,yR,'Likely limiter',limiter+' [heuristic]');
 
@@ -297,6 +300,7 @@
                     yR = row(rightX,yR,'Elite RI',yesNo(tier.eliteRI));
                     yR = compact(rightX,yR,'RI gates: SST '+pass(sample.SST>=28)+'  Moist '+pass(sample.moisture>=0.60)+'  Shear '+pass(sample.totalShear<=2.5));
                     yR = compact(rightX,yR,'          LWC '+pass(sys.lowerWarmCore>=0.82)+'  UWC '+pass(sys.upperWarmCore>=0.72)+'  Org '+pass(sys.organization>=0.62));
+                    yR = compact(rightX,yR,'          Land influence '+pass(landState && landState.influence<=LandInteraction.maxInfluence.exceptionalRI));
                     yR = row(rightX,yR,'Recovery active',recovery ? yesNo(recovery.active) : 'N/A');
                     yR = row(rightX,yR,'Recovery flavor',recovery ? (recovery.established?'Established TC':recovery.remnant?'Remnant':'None') : 'N/A');
                     yR = row(rightX,yR,'Recovery favorability',recovery ? pct(recovery.favorability,1) : 'N/A');
@@ -396,3 +400,4 @@
         set page(v){ page = Number(v)===1 ? 1 : 0; }
     };
 })();
+

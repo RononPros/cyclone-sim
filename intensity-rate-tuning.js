@@ -258,22 +258,24 @@
         const tropicalLike = sys.type===TROP || sys.type===SUBTROP || sys.type===TROPWAVE;
         if(!tropicalLike) return;
 
-        const lnd = u.land();
+        const landInfluence = LandInteraction.read(sys).influence;
+        const landLimits = LandInteraction.maxInfluence;
         const SST = u.f('SST');
         const moisture = u.f('moisture');
         const shear = u.f('shear').mag()+sys.interaction.shear;
 
-        const veryFavorable = !lnd &&
+        const veryFavorable = landInfluence<=landLimits.veryFavorable &&
             SST>=27.3 && moisture>=0.52 && shear<=3.5 &&
             sys.lowerWarmCore>=0.72 && sys.upperWarmCore>=0.62 &&
             sys.organization>=0.48;
 
-        const exceptionalRI = !lnd &&
+        const exceptionalRI = landInfluence<=landLimits.exceptionalRI &&
             SST>=28.0 && moisture>=0.60 && shear<=2.5 &&
             sys.lowerWarmCore>=0.82 && sys.upperWarmCore>=0.72 &&
             sys.organization>=0.62;
 
         const eliteRI = exceptionalRI &&
+            landInfluence<=landLimits.eliteRI &&
             SST>=29.2 && moisture>=0.72 && shear<=1.2 &&
             sys.lowerWarmCore>=0.94 && sys.upperWarmCore>=0.88 &&
             sys.organization>=0.84;
@@ -357,3 +359,4 @@
         get windFactor(){ return windFactor(); }
     };
 })();
+

@@ -1,6 +1,5 @@
-// Western Pacific environment tuning for Normal mode.
-// Keeps the base simulator climatology intact everywhere else while making
-// WPac SSTs and vertical-wind-shear seasonality more realistic.
+// Western Pacific SST tuning and Atlantic-level Pacific shear for Normal mode.
+// SST changes stay WPac-only; the shear correction covers EPac and WPac.
 (function(){
     const originalNormalAnomaly = ENV_DEFS.defaults.SSTAnomaly.mapFunc;
     ENV_DEFS[SIM_MODE_NORMAL].SSTAnomaly = {
@@ -63,75 +62,38 @@
         }
     };
 
-    // --- Vertical wind shear climatology ---
-    // Stock shear is simply the difference between the procedural upper- and
-    // lower-level steering vectors. In the WPac this routinely produces a basin-
-    // wide hostile background even during peak typhoon season. Keep the vector
-    // direction and all procedural pockets, but apply a stronger climatological
-    // magnitude correction across the tropical development belt.
+    // --- Pacific vertical wind shear climatology (0.18.0) ---
+    // Calibrated against Normal Atlantic shear using the bundled p5 noise over
+    // 8-26 N, 10-90% map width, five seeds and all twelve months. This matches
+    // typical tropical-belt magnitudes while keeping local vector variability.
+    // These are game-balancing parameters, not real-world shear measurements.
     const originalNormalShear = ENV_DEFS.defaults.shear.mapFunc;
     ENV_DEFS[SIM_MODE_NORMAL].shear = {
-        version: 2,
+        version: 3,
         mapFunc: (u,x,y,z)=>{
             const shear = originalNormalShear(u,x,y,z);
-            if(u.basin.mapType !== 8) return shear;
+            if(u.basin.mapType !== 7 && u.basin.mapType !== 8) return shear;
 
             const lat = abs(u.coord.latitude);
-            let lon = u.coord.longitude;
-            if(lon < 0) lon += 360;
-
-            // Target multiplier in the core typhoon belt. The WPac remains more
-            // hostile in winter, but even winter no longer receives an artificial
-            // shear increase. June-September gets a broad low-shear monsoon-trough
-            // / warm-pool window rather than only a token 10-20% reduction.
             const seasonalFactor = u.piecewise(u.yearfrac(z),[
-                [0, 0.78],
-                [1, 0.76],
-                [2, 0.72],
-                [3, 0.68],
-                [4, 0.62],
-                [5, 0.58],
-                [6, 0.55],
-                [7, 0.55],
-                [8, 0.57],
-                [9, 0.62],
-                [10,0.70],
-                [11,0.75],
-                [12,0.78]
+                [0.5,0.50], [1.5,0.46], [2.5,0.55], [3.5,0.40],
+                [4.5,0.34], [5.5,0.42], [6.5,0.54], [7.5,0.55],
+                [8.5,0.55], [9.5,0.57], [10.5,0.42], [11.5,0.51]
             ]);
 
-            // Strongest across the main 8-24 N development corridor. Deep-
-            // tropical systems still benefit substantially, while the correction
-            // fades quickly north of ~30-35 N so the subtropical jet and troughs
-            // can still create genuinely hostile recurvature environments.
+            // Match the development belt and fade toward the subtropics so
+            // jet/trough environments can still disrupt recurving cyclones.
             let latFactor;
             if(lat <= 3) latFactor = 0.75;
-            else if(lat <= 8) latFactor = map(lat,3,8,0.75,0.95);
-            else if(lat <= 24) latFactor = 1.0;
-            else if(lat <= 30) latFactor = map(lat,24,30,1.0,0.85);
-            else if(lat <= 35) latFactor = map(lat,30,35,0.85,0.50);
-            else if(lat <= 42) latFactor = map(lat,35,42,0.50,0.15);
+            else if(lat <= 8) latFactor = map(lat,3,8,0.75,1);
+            else if(lat <= 26) latFactor = 1;
+            else if(lat <= 35) latFactor = map(lat,26,35,1,0.25);
+            else if(lat <= 45) latFactor = map(lat,35,45,0.25,0);
             else latFactor = 0;
 
-            // Favor the western warm pool and Philippine Sea, tapering gradually
-            // toward the dateline/eastern edge without creating a hard boundary.
-            let lonFactor;
-            if(lon < 105) lonFactor = 0.75;
-            else if(lon <= 125) lonFactor = map(lon,105,125,0.75,1.0,true);
-            else if(lon <= 165) lonFactor = 1.0;
-            else if(lon <= 180) lonFactor = map(lon,165,180,1.0,0.90,true);
-            else if(lon <= 205) lonFactor = map(lon,180,205,0.90,0.70,true);
-            else lonFactor = 0.65;
-
-            const influence = constrain(latFactor*lonFactor,0,1);
-            let factor = lerp(1,seasonalFactor,influence);
-            factor = constrain(factor,0.55,1.0);
-
-            // Magnitude only. This does not alter the LL/UL steering vectors,
-            // storm motion, shear direction, or the location of procedural
-            // trough/jet pockets; it only fixes the excessive background magnitude.
-            shear.mult(factor);
+            shear.mult(lerp(1,seasonalFactor,latFactor));
             return shear;
         }
     };
 })();
+

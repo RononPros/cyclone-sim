@@ -19,14 +19,14 @@
         // a badly placed Low cannot carry the boost halfway across an ocean.
         sys[ATTR] = max(0,remaining-1);
 
-        const lnd = u.land();
+        const exposure = LandInteraction.read(sys);
         const SST = u.f('SST');
         const moisture = u.f('moisture');
         const shear = u.f('shear').mag() + sys.interaction.shear;
         const warmStructure = sys.lowerWarmCore >= 0.65 && sys.upperWarmCore >= 0.55;
 
-        // No free development over land, cool water, dry air, or strong shear.
-        const decent = !lnd && warmStructure &&
+        // Require ample ocean support, warm water, moist air and low shear.
+        const decent = exposure.oceanSupport>=0.85 && warmStructure &&
             SST >= 26.5 && moisture >= 0.45 && shear <= 4.5;
         if(!decent) return;
 
@@ -36,7 +36,7 @@
         const sstFactor = map(SST,26.5,29.5,0,1,true);
         const moistureFactor = map(moisture,0.45,0.70,0,1,true);
         const shearFactor = map(shear,4.5,1.0,0,1,true);
-        const favorability = constrain(
+        const favorability = exposure.oceanSupport*constrain(
             0.40*sstFactor + 0.35*moistureFactor + 0.25*shearFactor,
             0,1
         );
@@ -46,7 +46,7 @@
         const organizationTarget = 0.48 + 0.08*favorability;
         const organizationRate = 0.08 + 0.08*favorability;
         if(sys.organization < organizationTarget)
-            sys.organization = lerp(sys.organization,organizationTarget,organizationRate);
+            sys.organization = lerp(sys.organization,organizationTarget,organizationRate*exposure.oceanSupport);
 
         // The stock weak-wave noise can otherwise push a fresh 1012 hPa Low toward
         // 1020 hPa even in decent conditions. Limit that net rise, with essentially
@@ -61,6 +61,7 @@
         const organizationProgress = map(sys.organization,0.30,0.55,0,1,true);
         let genesisTarget = lerp(1011,1004,organizationProgress) - 1.5*favorability;
         genesisTarget = max(genesisTarget,1002);
+        genesisTarget = lerp(1012,genesisTarget,exposure.oceanSupport);
 
         if(genesisTarget < sys.pressure){
             const pressureRate = 0.08 + 0.08*favorability;
@@ -102,3 +103,4 @@
     for(let mode=0; mode<SIMULATION_MODES.length; mode++)
         wrapMode(mode);
 })();
+

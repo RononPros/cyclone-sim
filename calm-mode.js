@@ -67,9 +67,9 @@ SIMULATION_MODES.push('Calm');
     );
 
     // Give storms a modest effective-shear penalty without changing their tracks.
-    // The stock shear vector is still used; Calm simply raises its magnitude 10%.
+    // Use the tuned Normal shear vector, then raise its magnitude by 10%.
     ENV_DEFS[SIM_MODE_CALM].shear = cloneModeEntry(ENV_DEFS[SIM_MODE_CALM].shear);
-    const normalShearMap = ENV_DEFS.defaults.shear.mapFunc;
+    const normalShearMap = ENV_DEFS[SIM_MODE_NORMAL].shear.mapFunc || ENV_DEFS.defaults.shear.mapFunc;
     ENV_DEFS[SIM_MODE_CALM].shear.mapFunc = function(u,x,y,z){
         const shear = normalShearMap(u,x,y,z);
         shear.mult(1.10);
@@ -83,3 +83,4 @@ SIMULATION_MODES.push('Calm');
     for(const key in STORM_ALGORITHM[SIM_MODE_NORMAL])
         STORM_ALGORITHM[SIM_MODE_CALM][key] = STORM_ALGORITHM[SIM_MODE_NORMAL][key];
 })();
+
