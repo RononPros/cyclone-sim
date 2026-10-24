@@ -592,8 +592,9 @@ UI.init = function(){
         s.button("Start",true,20);
     },function(){
         yearselbox.enterFunc();
-        let seed = seedsel.value;
-        if(/^-?\d+$/g.test(seed)) advancedBasinSettings.seed = parseInt(seed);
+        let seed = seedsel.value.trim();
+        if(seed==='') advancedBasinSettings.seed = undefined;
+        else if(/^-?\d+$/g.test(seed)) advancedBasinSettings.seed = parseInt(seed);
         else advancedBasinSettings.seed = hashCode(seed);
         seedsel.value = '';
 
@@ -612,7 +613,8 @@ UI.init = function(){
             'seed',
             'designations',
             'scale',
-            'scaleFlavor'
+            'scaleFlavor',
+            'sstOffset'
         ]) opts[o] = advancedBasinSettings[o];
         let basin = new Basin(false,opts);
 
@@ -694,6 +696,12 @@ UI.init = function(){
         textAlign(LEFT,CENTER);
         text('Seed:',0,basinCreationMenuButtonHeights/2);
     }).append(false,50,0,basinCreationMenuButtonWidths-50,basinCreationMenuButtonHeights,[18,16]);
+
+    TemperatureEditor.createSlider(basinCreationMenuAdvanced,WIDTH/2-200,HEIGHT/2,400,48,{
+        label:'Global SST adjustment',min:-5,max:5,step:0.1,unit:'°C',
+        get:()=>advancedBasinSettings.sstOffset || 0,
+        set:value=>{advancedBasinSettings.sstOffset=value;}
+    });
 
     basinCreationMenuAdvanced.append(false,WIDTH/2-basinCreationMenuButtonWidths/2,7*HEIGHT/8-20,basinCreationMenuButtonWidths,basinCreationMenuButtonHeights,function(s){ // "Back" button
         s.button("Back", true, 20);

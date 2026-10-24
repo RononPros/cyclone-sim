@@ -23,7 +23,7 @@ function loadSimulation(){
         add(x,y){ if(x && typeof x==='object'){ this.x+=x.x; this.y+=x.y; }else{ this.x+=x||0; this.y+=y||0; } return this; }
         sub(x,y){ if(x && typeof x==='object'){ this.x-=x.x; this.y-=x.y; }else{ this.x-=x||0; this.y-=y||0; } return this; }
         mult(f){ this.x*=f; this.y*=f; return this; }
-        mag(){ return Math.hypot(this.x,this.y); }
+        mag(){ return Math.sqrt(this.x*this.x+this.y*this.y); }
         heading(){ return Math.atan2(this.y,this.x); }
         rotate(a){ const x=this.x; this.x=x*Math.cos(a)-this.y*Math.sin(a); this.y=x*Math.sin(a)+this.y*Math.cos(a); return this; }
         setMag(m){ const length=this.mag(); if(length) this.mult(m/length); return this; }
@@ -51,7 +51,7 @@ function loadSimulation(){
         sin:Math.sin,cos:Math.cos,atan:Math.atan,atan2:Math.atan2,
         PI:Math.PI,TAU:2*Math.PI,HALF_PI:Math.PI/2,
         LEFT:'left',RIGHT:'right',CENTER:'center',TOP:'top',BOTTOM:'bottom',
-        NORMAL:'normal',BOLD:'bold',RGB:'rgb',HSB:'hsb',
+        NORMAL:'normal',BOLD:'bold',RGB:'rgb',HSB:'hsb',CLOSE:'close',
         textWidth:value=>String(value).length*6,
         mouseX:0,mouseY:0,key:'',keyCode:0,keyIsDown:()=>false,
         displayWidth:960,displayHeight:540,windowWidth:960,windowHeight:540
@@ -70,7 +70,7 @@ function loadSimulation(){
         globalThis.drawCalls=[];
         const drawingState={size:12,align:'left'};
         const drawingStack=[];
-        for(const key of ['fill','stroke','noStroke','noFill','strokeWeight','rect','line','textStyle','textFont','colorMode','translate'])
+        for(const key of ['fill','stroke','noStroke','noFill','strokeWeight','rect','line','point','ellipse','beginShape','endShape','vertex','textStyle','textFont','colorMode','translate'])
             globalThis[key]=function(){};
         globalThis.push=function(){drawingStack.push(Object.assign({},drawingState));};
         globalThis.pop=function(){Object.assign(drawingState,drawingStack.pop()||{});};
@@ -91,15 +91,15 @@ function loadSimulation(){
         simSettings = {pressureDeepeningRate:1.96,windIntensificationRate:5.6,trackMode:0,stormDebugMode:false};
         land = {get:()=>0,getSubBasin:()=>0};
         globalThis.testAPI = {
-            LandInteraction,Coordinate,Environment,ActiveSystem,Storm,Basin,Season,LoadData,
+            LandInteraction,TemperatureAdjustments,TemperatureEditor,Coordinate,Environment,EnvNoiseChannel,ActiveSystem,Storm,Basin,Season,LoadData,
             algorithms:STORM_ALGORITHM,envDefs:ENV_DEFS,activeAttributes:ACTIVE_ATTRIBS,
             modes:SIMULATION_MODES,normal:SIM_MODE_NORMAL,calm:SIM_MODE_CALM,experimental:SIM_MODE_EXPERIMENTAL,
             TROP,SUBTROP,TROPWAVE,EXTROP,SAVE_FORMAT,UI,
             setLand(fn){ land={get:fn,getSubBasin:()=>0}; },
             setSettings(values){ Object.assign(simSettings,values); },
-            makeBasin(mapType=6,mode=SIM_MODE_NORMAL){
+            makeBasin(mapType=6,mode=SIM_MODE_NORMAL,seed=1){
                 const basin=Object.create(Basin.prototype);
-                Object.assign(basin,{mapType,actMode:mode,tick:1,startYear:2026,SHem:false,activeSystems:[],seasons:{},subBasins:{}});
+                Object.assign(basin,{mapType,actMode:mode,seed,tick:1,startYear:2026,SHem:false,activeSystems:[],seasons:{},subBasins:{}});
                 const season=new Season(basin);
                 basin.seasons[2026]=season;
                 basin.getSeason=()=>2026;

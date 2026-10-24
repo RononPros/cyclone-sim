@@ -8,6 +8,7 @@ class Basin{
         this.subBasins = {};
         this.tick = 0;
         this.lastSaved = 0;
+        this.temperatureAdjustments = TemperatureAdjustments.create(opts.sstOffset);
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
@@ -70,7 +71,7 @@ class Basin{
         //         DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
         //     );
         // }
-        this.seed = opts.seed || moment().valueOf();
+        this.seed = opts.seed===undefined ? moment().valueOf() : opts.seed;
         this.env = new Environment(this);
         this.saveName = load || AUTOSAVE_SAVE_NAME;
         if(load) this.initialized = this.load();
@@ -518,6 +519,7 @@ class Basin{
                 }
             }
             b.subBasins = {};
+            b.temperatureAdjustments = TemperatureAdjustments.serialize(this);
             for(let i in this.subBasins){
                 let s = this.subBasins[i];
                 if(s instanceof SubBasin) b.subBasins[i] = s.save();
@@ -597,6 +599,7 @@ class Basin{
                                 this.actMode = SIM_MODE_NORMAL;
                         }
                         this.mapType = obj.mapType;
+                        this.temperatureAdjustments = TemperatureAdjustments.normalize(obj.temperatureAdjustments,obj.tick);
                         for(let a of obj.activeSystems){
                             this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }
@@ -626,7 +629,8 @@ class Basin{
                             let arr = decodeB36StringArray(parts.pop());
                             let flags = arr.pop() || 0;
                             this.startYear = arr.pop();
-                            this.seed = arr.pop() || moment().valueOf();
+                            const savedSeed = arr.pop();
+                            this.seed = savedSeed===undefined ? moment().valueOf() : savedSeed;
                             this.lastSaved = this.tick = arr.pop() || 0;
                             oldSeqNameIndex = arr.pop();
                             oldHurricaneStrengthTerm = arr.pop() || 0;
