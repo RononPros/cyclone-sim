@@ -1,8 +1,30 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.18.1 adds reproducible environmental seeds to the land-interaction
-and Pacific-shear changes from 0.18.0.
+Raptor Mod 0.19.0 adds a global SST adjustment and custom warm/cold bubbles to
+the reproducible environmental seeds, coastal land interaction and Pacific shear
+tuning from 0.18.x.
+
+New Basin → Advanced has a Global SST adjustment slider (-5 to +5°C, 0.1°C
+steps). During a simulation, open the side menu → Temperature Editor. Opening
+the editor pauses the simulation; edits are available only at the present.
+Choose Warm or Cold and click/drag over the ocean to place a stationary bubble.
+Use Select / Move to drag an existing bubble, or Next to cycle through bubbles.
+The anomaly slider changes its centre strength (-10 to +10°C); the radius slider
+changes its reach (100–2500 km). Delete and Undo support experimentation.
+
+Bubbles taper smoothly to zero at their radius using `1 - 3q² + 2q³`, where
+`q` is spherical distance divided by radius. Global and local adjustments add to
+the existing anomaly field exactly once, so actual SST, anomaly displays and
+storm physics agree. Seasonal and procedural variability continue normally.
+Bubble outlines can be shown/hidden in the editor or side menu, independently
+of their physical effects. Up to 64 bubbles can be active at once.
+
+Adjustments and visibility save with each basin; old saves default to zero and
+no bubbles. Edits take effect at their simulated hour, and earlier analysis
+views retain the adjustment that existed then. Undo records a new edit at the
+present rather than erasing history. The last 50 edits can be undone during the
+current session. Bubbles remain stationary until edited or deleted.
 
 Land interaction samples the existing terrain in three distance zones: 0–50 km
 (60% weight), 50–100 km (30%) and 100–200 km (10%). Samples use spherical

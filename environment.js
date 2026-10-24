@@ -273,6 +273,13 @@ class EnvField{
                 u.vec = this.vec;
                 u.modifiers = this.modifiers || {};
                 let res = this.mapFunc(u,x,y,z);
+                if(this.name==='SSTAnomaly'){
+                    // y is already in climatological hemisphere coordinates.
+                    // Return to display coordinates for player-placed bubbles,
+                    // including nested SST -> SSTAnomaly calls in southern maps.
+                    const adjustment=TemperatureAdjustments.offsetAt(this.basin,x,this.basin.hemY(y),z);
+                    if(adjustment!==0) res+=adjustment;
+                }
                 if(this.isVectorField && !this.noVectorFlip) res.y = this.basin.hem(res.y);
                 return res;
             }

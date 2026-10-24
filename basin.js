@@ -8,6 +8,7 @@ class Basin{
         this.subBasins = {};
         this.tick = 0;
         this.lastSaved = 0;
+        this.temperatureAdjustments = TemperatureAdjustments.create(opts.sstOffset);
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
@@ -518,6 +519,7 @@ class Basin{
                 }
             }
             b.subBasins = {};
+            b.temperatureAdjustments = TemperatureAdjustments.serialize(this);
             for(let i in this.subBasins){
                 let s = this.subBasins[i];
                 if(s instanceof SubBasin) b.subBasins[i] = s.save();
@@ -597,6 +599,7 @@ class Basin{
                                 this.actMode = SIM_MODE_NORMAL;
                         }
                         this.mapType = obj.mapType;
+                        this.temperatureAdjustments = TemperatureAdjustments.normalize(obj.temperatureAdjustments,obj.tick);
                         for(let a of obj.activeSystems){
                             this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }

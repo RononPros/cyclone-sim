@@ -22,7 +22,7 @@ body{
  * Explicit fixed positioning avoids layout interactions that can push p5's
  * canvas far off-screen.
  */
-canvas{
+canvas.p5Canvas{
 	display: block !important;
 	position: fixed !important;
 	left: 50% !important;

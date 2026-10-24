@@ -51,7 +51,7 @@ function loadSimulation(){
         sin:Math.sin,cos:Math.cos,atan:Math.atan,atan2:Math.atan2,
         PI:Math.PI,TAU:2*Math.PI,HALF_PI:Math.PI/2,
         LEFT:'left',RIGHT:'right',CENTER:'center',TOP:'top',BOTTOM:'bottom',
-        NORMAL:'normal',BOLD:'bold',RGB:'rgb',HSB:'hsb',
+        NORMAL:'normal',BOLD:'bold',RGB:'rgb',HSB:'hsb',CLOSE:'close',
         textWidth:value=>String(value).length*6,
         mouseX:0,mouseY:0,key:'',keyCode:0,keyIsDown:()=>false,
         displayWidth:960,displayHeight:540,windowWidth:960,windowHeight:540
@@ -70,7 +70,7 @@ function loadSimulation(){
         globalThis.drawCalls=[];
         const drawingState={size:12,align:'left'};
         const drawingStack=[];
-        for(const key of ['fill','stroke','noStroke','noFill','strokeWeight','rect','line','textStyle','textFont','colorMode','translate'])
+        for(const key of ['fill','stroke','noStroke','noFill','strokeWeight','rect','line','point','ellipse','beginShape','endShape','vertex','textStyle','textFont','colorMode','translate'])
             globalThis[key]=function(){};
         globalThis.push=function(){drawingStack.push(Object.assign({},drawingState));};
         globalThis.pop=function(){Object.assign(drawingState,drawingStack.pop()||{});};
@@ -91,7 +91,7 @@ function loadSimulation(){
         simSettings = {pressureDeepeningRate:1.96,windIntensificationRate:5.6,trackMode:0,stormDebugMode:false};
         land = {get:()=>0,getSubBasin:()=>0};
         globalThis.testAPI = {
-            LandInteraction,Coordinate,Environment,EnvNoiseChannel,ActiveSystem,Storm,Basin,Season,LoadData,
+            LandInteraction,TemperatureAdjustments,TemperatureEditor,Coordinate,Environment,EnvNoiseChannel,ActiveSystem,Storm,Basin,Season,LoadData,
             algorithms:STORM_ALGORITHM,envDefs:ENV_DEFS,activeAttributes:ACTIVE_ATTRIBS,
             modes:SIMULATION_MODES,normal:SIM_MODE_NORMAL,calm:SIM_MODE_CALM,experimental:SIM_MODE_EXPERIMENTAL,
             TROP,SUBTROP,TROPWAVE,EXTROP,SAVE_FORMAT,UI,
