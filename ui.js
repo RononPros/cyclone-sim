@@ -592,8 +592,9 @@ UI.init = function(){
         s.button("Start",true,20);
     },function(){
         yearselbox.enterFunc();
-        let seed = seedsel.value;
-        if(/^-?\d+$/g.test(seed)) advancedBasinSettings.seed = parseInt(seed);
+        let seed = seedsel.value.trim();
+        if(seed==='') advancedBasinSettings.seed = undefined;
+        else if(/^-?\d+$/g.test(seed)) advancedBasinSettings.seed = parseInt(seed);
         else advancedBasinSettings.seed = hashCode(seed);
         seedsel.value = '';
 

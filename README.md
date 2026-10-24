@@ -1,7 +1,8 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.18.0 adds circulation-wide land interaction and Pacific shear balancing.
+Raptor Mod 0.18.1 adds reproducible environmental seeds to the land-interaction
+and Pacific-shear changes from 0.18.0.
 
 Land interaction samples the existing terrain in three distance zones: 0–50 km
 (60% weight), 50–100 km (30%) and 100–200 km (10%). Samples use spherical
@@ -33,4 +34,27 @@ Run the headless regression checks with Node.js:
 ```sh
 node --test tests/*.test.js
 ```
+
+Environmental noise channels have independent seeded random streams. With the
+same basin seed, map and mode, new basins reproduce their starting environment
+and its subsequent evolution. Player actions and storm-related random calls do
+not change these streams. Their saved RNG state resumes after reload. Older saves
+keep their existing fields and begin a deterministic continuation from that saved
+state; they are not rewritten to match a freshly generated basin. Individual storm
+spawning and intensity randomness are still stochastic.
+
+Search the first simulated year for strong positive SST anomalies:
+
+```sh
+node scripts/find-hot-seeds.js --count 10000 --workers 4 --year 2026 --output scripts/seed-results/wpac-normal-first-year.json
+```
+
+This searches Normal / Western Pacific using the 957 ocean cells on the displayed
+20-unit grid, generated from the bundled Earth map. It stops at the next calendar
+year boundary: 8,760 hours for 2026. Initial screening samples every 28 days; the
+top 50 candidates per ranking are refined daily, then the top five per ranking
+are refined hourly. Both the largest anomaly anywhere over water and the largest
+tropical anomaly (5–30°N) are reported, with actual SST, coordinates and UTC time.
+Results are the strongest found by this finite, staged search, not guaranteed
+global maxima over every seed or every point between map cells.
 

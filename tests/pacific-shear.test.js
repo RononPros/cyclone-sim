@@ -5,7 +5,7 @@ const {loadSimulation} = require('./helpers/simulation');
 function environment(s,mapType,seed,mode=s.api.normal){
     s.context.randomSeed(seed);
     s.context.noiseSeed(seed);
-    const basin=s.api.makeBasin(mapType,mode);
+    const basin=s.api.makeBasin(mapType,mode,seed);
     basin.tick=0;
     basin.env=new s.api.Environment(basin);
     basin.env.init();
