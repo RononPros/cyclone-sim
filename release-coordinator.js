@@ -2,8 +2,9 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.18.0';
-    const BUILD_DATE = '23 Oct 2026';
+    const BUILD = '0.18.1';
+    const BUILD_DATE = '24 Oct 2026';
+    const DATE_OCT_23 = '23 Oct 2026';
     const DATE_SEP_9 = '9 Sep 2026';
     const DATE_23 = '23 Aug 2026';
     const DATE_22 = '22 Aug 2026';
@@ -13,6 +14,18 @@
         {
             build: BUILD,
             date: BUILD_DATE,
+            changes: [
+                'Basin seeds now reproduce the starting environment and its evolution through dedicated random streams for each environmental noise channel.',
+                'Environment offsets, wobble directions and hourly wobble are independent of storm spawning, player actions and unrelated global random calls.',
+                'Saved channel random state now resumes the same environment evolution after reloading; older saves retain their existing offsets and vectors.',
+                'Fixed explicit numeric seed 0 being treated as a blank seed; an empty seed field still generates a fresh timestamp seed.',
+                'Added a bounded first-year Normal / Western Pacific SST-anomaly search with an ocean-only map grid and staged hourly refinement.',
+                'Environmental reproducibility does not prescribe identical individual storms; storm spawning and intensity randomness remain stochastic.'
+            ]
+        },
+        {
+            build: '0.18.0',
+            date: DATE_OCT_23,
             changes: [
                 'Added weighted land sampling across 0-50, 50-100 and 100-200 km zones, with 60%, 30% and 10% weights.',
                 'Nearby land now gradually reduces ocean energy support and organization before the storm centre crosses the coast; extensive inland exposure removes ocean support.',

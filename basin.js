@@ -70,7 +70,7 @@ class Basin{
         //         DesignationSystem.australianRegionPortMoresby.clone().setCrossingModes(undefined,DESIG_CROSSMODE_KEEP)
         //     );
         // }
-        this.seed = opts.seed || moment().valueOf();
+        this.seed = opts.seed===undefined ? moment().valueOf() : opts.seed;
         this.env = new Environment(this);
         this.saveName = load || AUTOSAVE_SAVE_NAME;
         if(load) this.initialized = this.load();
@@ -626,7 +626,8 @@ class Basin{
                             let arr = decodeB36StringArray(parts.pop());
                             let flags = arr.pop() || 0;
                             this.startYear = arr.pop();
-                            this.seed = arr.pop() || moment().valueOf();
+                            const savedSeed = arr.pop();
+                            this.seed = savedSeed===undefined ? moment().valueOf() : savedSeed;
                             this.lastSaved = this.tick = arr.pop() || 0;
                             oldSeqNameIndex = arr.pop();
                             oldHurricaneStrengthTerm = arr.pop() || 0;

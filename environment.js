@@ -22,18 +22,40 @@ class NoiseChannel{
 }
 
 class EnvNoiseChannel extends NoiseChannel{
+    static seedFor(basin,field,index){
+        // Separate streams keep environment evolution independent of storm RNG,
+        // manual spawning, rendering, and the order in which fields are added.
+        const key = 'environment-v1:'+(Number(basin.seed)>>>0)+':'+field+':'+index;
+        let state = 2166136261;
+        for(let i=0;i<key.length;i++)
+            state = Math.imul(state^key.charCodeAt(i),16777619)>>>0;
+        return state;
+    }
+
     constructor(basin,field,index,loadData,octaves,falloff,zoom,zZoom,wMax,zWMax,wRFac){
         let r = NC_OFFSET_RANDOM_FACTOR;
-        super(octaves,falloff,zoom,zZoom,random(r),random(r),random(r));
+        let state = EnvNoiseChannel.seedFor(basin,field,index);
+        const next = ()=>{
+            state = (Math.imul(state,1664525)+1013904223)>>>0;
+            return state/4294967296;
+        };
+        super(octaves,falloff,zoom,zZoom,next()*r,next()*r,next()*r);
         this.wobbleMax = wMax || 1;
         this.zWobbleMax = zWMax || this.wobbleMax;
         this.wobbleRotFactor = wRFac || PI/16;
-        this.wobbleVector = p5.Vector.random2D();
+        const angle = next()*2*Math.PI;
+        this.wobbleVector = createVector(Math.cos(angle),Math.sin(angle));
+        this.randomState = state;
 
         this.basin = basin instanceof Basin && basin;
         this.field = field;
         this.index = index;
         if(loadData instanceof LoadData) this.load(loadData);
+    }
+
+    random(minimum,maximum){
+        this.randomState = (Math.imul(this.randomState,1664525)+1013904223)>>>0;
+        return minimum+(maximum-minimum)*this.randomState/4294967296;
     }
 
     get(x,y,z){
@@ -71,11 +93,18 @@ class EnvNoiseChannel extends NoiseChannel{
 
     wobble(){
         let v = this.wobbleVector;
-        v.setMag(random(0.0001,this.wobbleMax));
+        const magnitude = this.random(0.0001,this.wobbleMax);
+        const length = Math.sqrt(v.x*v.x+v.y*v.y);
+        const scale = length ? magnitude/length : 0;
+        v.x *= scale;
+        v.y *= scale;
         this.xOff += v.x/this.zoom;
         this.yOff += v.y/this.zoom;
-        this.zOff += random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
-        v.rotate(random(-this.wobbleRotFactor,this.wobbleRotFactor));
+        this.zOff += this.random(-this.zWobbleMax,this.zWobbleMax)/this.zZoom;
+        const angle = this.random(-this.wobbleRotFactor,this.wobbleRotFactor);
+        const x = v.x, y = v.y;
+        v.x = x*Math.cos(angle)-y*Math.sin(angle);
+        v.y = x*Math.sin(angle)+y*Math.cos(angle);
     }
 
     record(){
@@ -116,6 +145,7 @@ class EnvNoiseChannel extends NoiseChannel{
         w.x = this.wobbleVector.x;
         w.y = this.wobbleVector.y;
         for(let p of ['xOff','yOff','zOff']) obj[p] = this[p];
+        obj.randomState = this.randomState;
         return obj;
     }
 
@@ -125,15 +155,19 @@ class EnvNoiseChannel extends NoiseChannel{
             let wy;
             if(data.format>=FORMAT_WITH_INDEXEDDB){
                 let obj = data.value;
-                for(let p of ['xOff','yOff','zOff']) if(obj[p]) this[p] = obj[p];
+                for(let p of ['xOff','yOff','zOff'])
+                    if(Number.isFinite(obj[p])) this[p] = obj[p];
+                if(Number.isInteger(obj.randomState) && obj.randomState>=0 && obj.randomState<=4294967295)
+                    this.randomState = obj.randomState;
                 wx = obj.wobbleVector && obj.wobbleVector.x;
                 wy = obj.wobbleVector && obj.wobbleVector.y;
             }else{
                 let str = data.value;
                 let arr = decodeB36StringArray(str);
-                this.xOff = arr.pop() || this.xOff;
-                this.yOff = arr.pop() || this.yOff;
-                this.zOff = arr.pop() || this.zOff;
+                for(const p of ['xOff','yOff','zOff']){
+                    const value = arr.pop();
+                    if(Number.isFinite(value)) this[p] = value;
+                }
                 wx = arr.pop();
                 wy = arr.pop();
             }
