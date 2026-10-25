@@ -1,8 +1,8 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.21.1 uses gentler local terrain wind reduction, especially over
-lowlands, alongside broader cyclone winds and toggleable city/wind overlays.
+Raptor Mod 0.22.0 adds motion-driven asymmetric cyclone winds, directional terrain
+shelter, stronger high-intensity outer winds and finer core shading.
 
 City dots sit near representative real city locations on Earth basin maps. Their
 numeric wind labels are visible by default; units follow Settings. Open the
@@ -36,21 +36,45 @@ Missing legacy background archives show an em dash where the background could
 change the total and no archived city observation is available.
 
 The shared cyclone footprint uses spherical distance, a persistent storm-size
-factor, a radius of maximum wind, an inner core, outer decay and terrain
-reduction. It is a simplified symmetric game model, not an operational forecast.
+factor, a radius of maximum wind, an inner core, outer decay, storm motion and
+terrain shelter. It is a simplified game model, not an operational forecast.
 Terrain wind reduction starts at about 5% near sea level and grows smoothly to
-35% over the highest mapped terrain, eased from the previous 18–42.6% range.
-The elevation response is gentler in lowlands and hills. This same local factor
-applies to background winds, cyclone winds, city readings, wind shading, Human
-Risk and hourly impacts. These are game-balancing parameters; the terrain index
-does not resolve local surface roughness, wind direction or ridge acceleration.
+35% over the highest mapped terrain. The elevation response is gentler in
+lowlands and hills. Directional shelter additionally checks higher ground at
+5–200 km upwind of the local airflow. Barrier strength fades with distance and
+can remove at most another 38% of the wind. Equal-height plains add no barrier;
+shelter can extend over coastal water downwind of higher land. Thirty-two cached
+upwind bearings interpolate smoothly as direction changes. Synthetic maps ignore
+unknown terrain outside their edges. This approximates sheltering; it does not
+model ridge acceleration, gap jets, downslope windstorms or building roughness.
+The same local terrain response feeds background winds, cyclone winds, cities,
+wind shading, Human Risk and hourly impacts.
 The outer power-law decay is broader in 0.21.0 (exponent 0.50 for tropical and
 subtropical systems, 0.45 otherwise), with a smooth cutoff at 600–3000 km depending
-on intensity, type and saved storm size. Peak wind and radius of maximum wind
-retain their previous definitions. The optional cyclone heatmap samples these
-same terrain-adjusted winds over land and water from 17 kt upward. It excludes
-background winds, follows the selected analysis time, refreshes after paused
-storm edits, and keeps tracks, icons and city readouts above its shading.
+on intensity, type and saved storm size. Above 200 km/h the eyewall radius stops
+contracting with intensity, so a rising maximum strengthens the outer field
+instead of nearly cancelling itself. The independent size factor still permits
+compact and large storms at the same intensity.
+
+Storm motion comes from hourly geographic displacement, converted to east/north
+knots, with a 100 kt sanity bound. A motion contribution of 65% of that speed,
+capped at 30% of the reported maximum, redistributes the circulation. The two
+vector components share the radial taper; their strongest possible combination
+equals the storm's reported maximum. Circulation reverses in southern basins and
+has a 15-degree inward flow angle. Motion generally favours the right side in the
+northern hemisphere and the left in the southern hemisphere. These are tunable
+game parameters; see [NOAA's motion explanation](https://www.aoml.noaa.gov/hrd/tcfaq/D6.html).
+Exact motion components persist in active saves and advisory records. Older
+advisories estimate motion from their preceding six-hour track segment; a lone
+old advisory defaults to stationary. Saved city observations and impact totals
+remain their recorded values.
+
+The optional cyclone heatmap samples these same local winds over land and water
+from 17 kt upward. Its base grid is 8 map units, refining to 2 and 1 near strong
+cores, with extra extreme colours at 170 and 210 kt (about 315 and 389 km/h).
+It excludes background winds, follows the selected analysis time, refreshes after
+paused storm or motion edits, and keeps tracks, icons and city readouts above
+its shading. Hiding it keeps the wind physics and impacts active.
 The same local wind calculation drives cities, Human Risk and a 6-unit land
 exposure grid. Rainfall, flooding and storm surge are not modeled by this feature.
 

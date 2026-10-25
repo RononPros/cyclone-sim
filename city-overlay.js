@@ -24,7 +24,7 @@ const CityOverlay = (()=>{
             let best,bestCost=Infinity;
             for(const [dx,dy] of positions){
                 const x=Math.max(2,Math.min(WIDTH-width-2,city.x+dx));
-                const y=Math.max(55,Math.min(HEIGHT-height-32,city.y+dy));
+                const y=Math.max(75,Math.min(HEIGHT-height-32,city.y+dy));
                 let cost=0;
                 for(const old of placed){
                     const w=Math.max(0,Math.min(x+width+2,old.x+old.width)-Math.max(x-2,old.x));

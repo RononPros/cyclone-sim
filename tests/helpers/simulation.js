@@ -91,7 +91,7 @@ function loadSimulation(){
         simSettings = {pressureDeepeningRate:1.96,windIntensificationRate:5.6,trackMode:0,stormDebugMode:false,speedUnit:0,showCityWinds:true,showWindField:false};
         land = {get:()=>0,getSubBasin:()=>0};
         globalThis.testAPI = {
-            LandInteraction,TemperatureAdjustments,TemperatureEditor,WindField,WindImpacts,CityLocations,CityOverlay,CycloneWindOverlay,StormData,Coordinate,Environment,EnvNoiseChannel,ActiveSystem,Storm,Basin,Season,LoadData,
+            LandInteraction,TemperatureAdjustments,TemperatureEditor,WindField,WindShelter,WindImpacts,CityLocations,CityOverlay,CycloneWindOverlay,StormData,Coordinate,Environment,EnvNoiseChannel,ActiveSystem,Storm,Basin,Season,LoadData,
             algorithms:STORM_ALGORITHM,envDefs:ENV_DEFS,activeAttributes:ACTIVE_ATTRIBS,
             modes:SIMULATION_MODES,normal:SIM_MODE_NORMAL,calm:SIM_MODE_CALM,experimental:SIM_MODE_EXPERIMENTAL,
             TROP,SUBTROP,TROPWAVE,EXTROP,SAVE_FORMAT,UI,

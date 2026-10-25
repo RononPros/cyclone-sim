@@ -2,7 +2,7 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.21.1';
+    const BUILD = '0.22.0';
     const BUILD_DATE = '25 Oct 2026';
     const DATE_OCT_24 = '24 Oct 2026';
     const DATE_OCT_23 = '23 Oct 2026';
@@ -14,6 +14,19 @@
     const RELEASES = [
         {
             build: BUILD,
+            date: BUILD_DATE,
+            changes: [
+                'Fixed high-intensity outer winds flattening as a shrinking eyewall cancelled rising peak winds. Core contraction now stops above 200 km/h while independent storm sizes remain.',
+                'Added motion-driven asymmetric cyclone winds with hemisphere-aware circulation and a modest inward flow angle. The stronger and wider side rotates with the storm heading.',
+                'Storm motion uses geographic displacement in knots and is retained in active saves and advisory arrays; older tracks estimate it from preceding advisory positions.',
+                'Added directional terrain shelter from higher ground upwind of each location, including coastal water downwind of terrain. Flat lowlands retain their gentler base reduction.',
+                'City readings, cyclone wind shading, background winds, Human Risk and hourly impacts share the updated wind and shelter calculations.',
+                'Added finer one- and two-pixel shading around cyclone cores and separate extreme-wind colours from 170 and 210 kt; the heatmap refreshes after paused motion changes.',
+                'Wind-field display switches remain independent of physics and impacts. Cached terrain bearings and unchanged-frame shading limit repeated work.'
+            ]
+        },
+        {
+            build: '0.21.1',
             date: BUILD_DATE,
             changes: [
                 'Reduced the local surface-wind penalty near sea level from about 18% to 5%.',
