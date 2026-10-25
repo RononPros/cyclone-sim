@@ -1,8 +1,32 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.22.0 adds motion-driven asymmetric cyclone winds, directional terrain
-shelter, stronger high-intensity outer winds and finer core shading.
+Raptor Mod 0.23.0 adds varied Atlantic Gulf steering through a seeded, shifting
+subtropical ridge and passing troughs. The 0.22.0 asymmetric winds, directional
+terrain shelter, stronger extreme-storm winds and finer core shading remain.
+
+Normal and Calm Atlantic maps now let the western edge of the Bermuda/Azores
+ridge extend west or retreat east. West of that edge, easterly steering relaxes
+and northward flow strengthens. Broad troughs travel eastward every 8–12 days,
+with event strengths varying by seed and stronger seasonal influence in autumn
+and winter. Their southern/eastern flank can draw Gulf storms north or northeast;
+westward tracks remain possible during blocking ridge patterns.
+This is a tunable game approximation of [ridge and trough steering](https://www.aoml.noaa.gov/hrd/tcfaq/G5.html),
+not a calibration to observed Gulf track percentages or a pressure-field solver.
+
+The added synoptic flow blends smoothly over the Gulf and western Atlantic,
+fading across 17–23°N, 35–43°N, 106–99°W and 63–53°W. Low- and upper-level winds
+receive the same addition, preserving their shear difference from this component
+while both shallow and deep storms respond. Tropical Caribbean trade winds and
+the existing seasonal jet remain. Other basin maps and modes retain their prior
+steering. Hourly storm movement and the five-day track forecast read the same fields.
+Forecast environmental noise still uses the simulator's existing extrapolation.
+
+Synoptic phases are derived from basin seed and absolute simulated time without
+advancing random streams. Saves resume the same phases without additional saved
+state. Existing basins adopt the update when loaded; steering field versions mark
+older environmental reconstructions as changed, while recorded storm tracks,
+city observations and impact totals stay recorded.
 
 City dots sit near representative real city locations on Earth basin maps. Their
 numeric wind labels are visible by default; units follow Settings. Open the
