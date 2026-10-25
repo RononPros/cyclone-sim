@@ -2,7 +2,7 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.24.0';
+    const BUILD = '0.24.1';
     const BUILD_DATE = '25 Oct 2026';
     const DATE_OCT_24 = '24 Oct 2026';
     const DATE_OCT_23 = '23 Oct 2026';
@@ -14,6 +14,16 @@
     const RELEASES = [
         {
             build: BUILD,
+            date: BUILD_DATE,
+            changes: [
+                'Reduced Eastern and Western Pacific tropical-belt environmental shear by another 20% from the previous tuning in Normal mode.',
+                'Retained more shear relief through 26-45 degrees latitude for a gentler subtropical transition; the correction still fades out completely at 45 degrees.',
+                'Calm inherits the gentler Pacific shear before its existing 10% penalty. Shear direction, storm steering, seasonal variability and other basin values are retained.',
+                'Updated the shear field version so existing saves adopt the new balance and mark older environmental reconstructions as changed.'
+            ]
+        },
+        {
+            build: '0.24.0',
             date: BUILD_DATE,
             changes: [
                 'Added estimated short wind gusts to city readings and background weather, calculated from the actual local sustained wind after terrain and directional shelter.',

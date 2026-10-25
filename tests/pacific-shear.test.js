@@ -12,7 +12,7 @@ function environment(s,mapType,seed,mode=s.api.normal){
     return basin.env;
 }
 
-test('Pacific tropical-belt shear has approximately Atlantic seasonal magnitudes on independent seeds',()=>{
+test('Pacific tropical-belt shear stays gentler on average across independent seeds and seasons',()=>{
     const s=loadSimulation(),means=[];
     for(const mapType of [6,7,8]){
         const months=[];
@@ -34,10 +34,10 @@ test('Pacific tropical-belt shear has approximately Atlantic seasonal magnitudes
     }
     for(let basin=1;basin<3;basin++){
         const annualRatio=means[basin].reduce((a,b)=>a+b,0)/means[0].reduce((a,b)=>a+b,0);
-        assert.ok(annualRatio>0.70 && annualRatio<1.15,`annual Pacific/Atlantic ratio ${annualRatio}`);
+        assert.ok(annualRatio>0.55 && annualRatio<0.95,`annual Pacific/Atlantic ratio ${annualRatio}`);
         for(let month=0;month<12;month++){
             const ratio=means[basin][month]/means[0][month];
-            assert.ok(ratio>0.55 && ratio<1.40,`month ${month+1}: ratio ${ratio}`);
+            assert.ok(ratio>0.40 && ratio<1.15,`month ${month+1}: ratio ${ratio}`);
         }
     }
 });
