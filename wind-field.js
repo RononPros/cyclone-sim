@@ -141,14 +141,34 @@ const WindField = (()=>{
                 WindShelter.factor(basin,coord,terrain,vector.x,-vector.y) : null;
         cache.values.set(key,value);return value;
     }
+    function gustFactor(basin,coord,terrain=0,tick=basin.tick){
+        // Smooth, seeded turbulence on a sphere avoids map-edge/dateline seams.
+        // It uses no random draws and is fixed while model time is paused.
+        let hash=(Number(basin.seed)>>>0)^0x47555354;
+        hash=Math.imul(hash^(hash>>>16),0x21f0aaad);
+        hash=Math.imul(hash^(hash>>>15),0x735a2d97);
+        const phase=((hash^(hash>>>15))>>>0)/4294967296*2*Math.PI;
+        const lon=coord.longitude*Math.PI/180,lat=coord.latitude*Math.PI/180;
+        const x=Math.cos(lat)*Math.cos(lon),y=Math.cos(lat)*Math.sin(lon),z=Math.sin(lat);
+        const weather=(1+0.6*Math.sin(5*x+3*y+2*z+tick*2*Math.PI/36+phase)
+            +0.4*Math.sin(11*x-4*y+7*z+tick*2*Math.PI/17-phase))/2;
+        // Land/water exposure is deliberately coarse: elevation is not a
+        // building/vegetation roughness measurement. Shelter already affects U.
+        return terrain>0 ? 1.25+0.2*weather : 1.15+0.15*weather;
+    }
+    function gustFromWind(basin,wind,coord,terrain=0,tick=basin.tick){
+        return Number.isFinite(wind) ? Math.max(0,wind)*gustFactor(basin,coord,terrain,tick) : null;
+    }
     function sample(basin,profiles,coord,terrain=0,tick=basin.tick){
         const cyclone=strongest(profiles,coord,terrain);
         // Background weather is capped at 25 kt before terrain reduction. It
         // cannot change a higher storm wind or independently cross the impact
         // threshold, so destructive land-cell sampling can use strongest().
-        if(cyclone.wind>=25)return {...cyclone,backgroundKnown:true};
+        if(cyclone.wind>=25)return {...cyclone,backgroundKnown:true,
+            gust:gustFromWind(basin,cyclone.wind,coord,terrain,tick)};
         const background=backgroundAt(basin,coord,terrain,tick);
-        return {wind:Math.max(background||0,cyclone.wind),
+        const wind=Math.max(background||0,cyclone.wind);
+        return {wind,gust:background===null?null:gustFromWind(basin,wind,coord,terrain,tick),
             source:cyclone.wind>=(background||0)?cyclone.source:null,backgroundKnown:background!==null};
     }
     function project(mapType,coord){
@@ -159,5 +179,5 @@ const WindField = (()=>{
             y:(coord.latitude-bounds.north)/(bounds.south-bounds.north)*HEIGHT};
     }
     for(const key in ACTIVE_ATTRIBS)if(!ACTIVE_ATTRIBS[key].includes('windSize'))ACTIVE_ATTRIBS[key].push('windSize');
-    return {sizeFor,ensure,motionBetween,recordMotion,motionFor,profile,profiles,terrainFactor,vectorAt,windAt,strongest,backgroundAt,sample,project};
+    return {sizeFor,ensure,motionBetween,recordMotion,motionFor,profile,profiles,terrainFactor,vectorAt,windAt,strongest,backgroundAt,gustFactor,gustFromWind,sample,project};
 })();

@@ -56,7 +56,7 @@ test('new visibility settings migrate older settings and persist independently',
     s.evaluate(`
         waitingFor=0;waitingDescs={lowestAvailable:0,maxIndex:-1};
         globalThis.savedSettings=null;
-        globalThis.oldOrder=Settings.order().filter(k=>!['showCityWinds','showWindField'].includes(k));
+        globalThis.oldOrder=Settings.order().filter(k=>!['cityWindMode','windFieldGusts','showCityWinds','showWindField'].includes(k));
         globalThis.oldValues=oldOrder.map((k,i)=>i+10);
         db={settings:{get:()=>Promise.resolve(oldValues.slice()),put:value=>{
             savedSettings=value.slice();return Promise.resolve();
@@ -66,11 +66,15 @@ test('new visibility settings migrate older settings and persist independently',
     await new Promise(resolve=>setImmediate(resolve));
     assert.equal(s.evaluate('simSettings.showCityWinds'),true);
     assert.equal(s.evaluate('simSettings.showWindField'),false);
+    assert.equal(s.evaluate('simSettings.cityWindMode'),2);
+    assert.equal(s.evaluate('simSettings.windFieldGusts'),false);
     assert.equal(s.evaluate('oldOrder.every((k,i)=>simSettings[k]===oldValues[i])'),true);
-    s.evaluate('simSettings.setShowCityWinds(false);simSettings.setShowWindField(true);db.settings.get=()=>Promise.resolve(savedSettings.slice());simSettings=new Settings();');
+    s.evaluate('simSettings.setShowCityWinds(false);simSettings.setShowWindField(true);simSettings.setCityWindMode(1);simSettings.setWindFieldGusts(true);db.settings.get=()=>Promise.resolve(savedSettings.slice());simSettings=new Settings();');
     await new Promise(resolve=>setImmediate(resolve));
     assert.equal(s.evaluate('simSettings.showCityWinds'),false);
     assert.equal(s.evaluate('simSettings.showWindField'),true);
+    assert.equal(s.evaluate('simSettings.cityWindMode'),1);
+    assert.equal(s.evaluate('simSettings.windFieldGusts'),true);
     assert.equal(s.evaluate('oldOrder.every((k,i)=>simSettings[k]===oldValues[i])'),true);
 });
 

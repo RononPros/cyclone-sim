@@ -3,9 +3,10 @@
 const WindImpacts = (()=>{
     const money=value=>Math.round(value*100)/100;
     const nonnegative=value=>Number.isFinite(value)?Math.max(0,value):0;
-    const create=(tick=0)=>({version:1,startTick:tick,lastTick:tick,cells:Object.create(null),cities:Object.create(null)});
+    const optional=value=>Number.isFinite(value)?Math.max(0,value):null;
+    const create=(tick=0)=>({version:2,startTick:tick,lastTick:tick,cells:Object.create(null),cities:Object.create(null)});
     function normalize(value,tick){
-        if(!value || value.version!==1)return create(tick);
+        if(!value || ![1,2].includes(value.version))return create(tick);
         const data=create(Math.min(tick,nonnegative(value.startTick)));
         data.lastTick=Math.min(tick,Math.max(data.startTick,nonnegative(value.lastTick)));
         for(const [key,c] of Object.entries(value.cells||{}))if(c && /^\d+,\d+$/.test(key))
@@ -13,15 +14,20 @@ const WindImpacts = (()=>{
         for(const [id,c] of Object.entries(value.cities||{}))if(c){
             const records=new Map();
             for(const row of Array.isArray(c.records)?c.records:[])
-                if(Array.isArray(row) && row.length===6 && row.every(Number.isFinite) && row[0]>=data.startTick && row[0]<=tick)
-                    records.set(row[0],row.map(nonnegative));
+                if(Array.isArray(row) && [6,8].includes(row.length) && row.slice(0,6).every(Number.isFinite)
+                    && row[0]>=data.startTick && row[0]<=tick){
+                    const clean=row.slice(0,6).map(nonnegative);
+                    if(row.length===8)clean.push(optional(row[6]),optional(row[7]));
+                    records.set(row[0],clean);
+                }
             data.cities[id]={peakWind:nonnegative(c.peakWind),hours:nonnegative(c.hours),damage:nonnegative(c.damage),
                 deaths:Math.floor(nonnegative(c.deaths)),lastWind:nonnegative(c.lastWind),
+                lastGust:optional(c.lastGust),peakGust:optional(c.peakGust),
                 records:Array.from(records.values()).sort((a,b)=>a[0]-b[0])};
         }
         return data;
     }
-    const cityState=(data,id)=>data.cities[id] || (data.cities[id]={peakWind:0,hours:0,damage:0,deaths:0,lastWind:0,records:[]});
+    const cityState=(data,id)=>data.cities[id] || (data.cities[id]={peakWind:0,hours:0,damage:0,deaths:0,lastWind:0,lastGust:null,peakGust:null,records:[]});
     function loss(cell,old,wind){
         if(wind<34 || !cell.population)return {damage:0,deaths:0,fatalities:old.fatalities};
         const bounded=Math.min(wind,400);
@@ -49,12 +55,14 @@ const WindImpacts = (()=>{
         const grid=CityLocations.context(basin),profiles=WindField.profiles(basin);
         const changed=new Set();
         for(const city of grid.cities){
-            const c=cityState(data,city.id),before=JSON.stringify([c.lastWind,c.peakWind,c.hours]);
-            const localWind=WindField.sample(basin,profiles,city.coord,city.terrain).wind;
+            const c=cityState(data,city.id),before=JSON.stringify([c.lastWind,c.peakWind,c.hours,c.lastGust,c.peakGust]);
+            const sample=WindField.sample(basin,profiles,city.coord,city.terrain),localWind=sample.wind;
             c.lastWind=Math.round(localWind*10)/10;
             c.peakWind=Math.max(c.peakWind,c.lastWind);
+            c.lastGust=Number.isFinite(sample.gust)?Math.round(sample.gust*10)/10:null;
+            if(c.lastGust!==null)c.peakGust=Math.max(c.peakGust||0,c.lastGust);
             if(localWind>=34)c.hours++;
-            if(before!==JSON.stringify([c.lastWind,c.peakWind,c.hours]))changed.add(city.id);
+            if(before!==JSON.stringify([c.lastWind,c.peakWind,c.hours,c.lastGust,c.peakGust]))changed.add(city.id);
         }
         for(const cell of grid.cells){
             if(!basin.subInBasin(cell.sub))continue;
@@ -70,7 +78,7 @@ const WindImpacts = (()=>{
             }
         }
         for(const id of changed){
-            const c=data.cities[id];c.records.push([basin.tick,c.lastWind,c.peakWind,c.hours,c.damage,c.deaths]);
+            const c=data.cities[id];c.records.push([basin.tick,c.lastWind,c.peakWind,c.hours,c.damage,c.deaths,c.lastGust,c.peakGust]);
         }
         data.lastTick=basin.tick;
     }
@@ -78,12 +86,12 @@ const WindImpacts = (()=>{
         const data=basin.windImpacts;
         if(!data || tick<data.startTick)return null;
         const c=data.cities[id];
-        if(!c)return {wind:0,peakWind:0,hours:0,damage:0,deaths:0};
-        if(tick===basin.tick)return {wind:c.lastWind,peakWind:c.peakWind,hours:c.hours,damage:c.damage,deaths:c.deaths};
+        if(!c)return {wind:0,peakWind:0,gust:null,peakGust:null,hours:0,damage:0,deaths:0};
+        if(tick===basin.tick)return {wind:c.lastWind,peakWind:c.peakWind,gust:optional(c.lastGust),peakGust:optional(c.peakGust),hours:c.hours,damage:c.damage,deaths:c.deaths};
         let low=0,high=c.records.length;
         while(low<high){const middle=(low+high)>>>1;if(c.records[middle][0]<=tick)low=middle+1;else high=middle;}
         const row=low?c.records[low-1]:[0,0,0,0,0,0];
-        return {wind:row[1],peakWind:row[2],hours:row[3],damage:row[4],deaths:row[5]};
+        return {wind:row[1],peakWind:row[2],hours:row[3],damage:row[4],deaths:row[5],gust:optional(row[6]),peakGust:optional(row[7])};
     }
     return {create,normalize,advance,loss,cityAt,serialize:basin=>normalize(basin.windImpacts,basin.tick)};
 })();
