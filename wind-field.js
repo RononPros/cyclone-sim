@@ -20,8 +20,10 @@ const WindField = (()=>{
         const size=Number.isFinite(data.windSize) && data.windSize>=0.5 && data.windSize<=2 ? data.windSize : sizeFor(data.basin,storm);
         const tropical=data.type===TROP || data.type===SUBTROP;
         const rmw=clamp(clamp(tropical?65-maximum*0.22:85,18,85)*size,12,170);
-        const outer=clamp((220+maximum*4)*size*(tropical?1:1.25),300,1800);
-        return {maximum,size,rmw,outer,exponent:tropical?0.65:0.55,
+        // Broaden the outer circulation without inflating the maximum wind or
+        // the eyewall. The taper reaches calm gradually at the outer boundary.
+        const outer=clamp((450+maximum*7)*size*(tropical?1:1.35),600,3000);
+        return {maximum,size,rmw,outer,exponent:tropical?0.5:0.45,
             eye:tropical && maximum>=64?0.08:0.5,
             coord:data.coord(),storm,data};
     }

@@ -19,6 +19,24 @@ test('synthetic maps place unnamed settlements on their own land',()=>{
     for(const c of cities){assert.ok(c.coord.longitude>-60);assert.ok(c.name.startsWith('Settlement '));}
 });
 
+test('China labels are substantially sparser without removing exposure cities or other countries',()=>{
+    const s=loadSimulation(),a=s.api;a.setLand(()=>0.51);
+    const b=a.makeBasin(8),context=a.CityLocations.context(b);
+    const before=context.cities.map(c=>c.id),china=s.evaluate('CITY_CHINA_IDS');
+    const visible=a.CityLocations.visibleCities(b);
+    const dense=context.cities.filter(c=>china.has(c.id)),sparse=visible.filter(c=>china.has(c.id));
+    assert.ok(dense.length>30);
+    assert.ok(sparse.length<=dense.length/2,`${sparse.length} visible of ${dense.length}`);
+    for(let i=0;i<sparse.length;i++)for(let j=0;j<i;j++)
+        assert.ok(Math.hypot(sparse[i].x-sparse[j].x,sparse[i].y-sparse[j].y)>=36);
+    assert.ok(visible.some(c=>c.name==='Shanghai'));
+    assert.ok(visible.some(c=>c.name==='Beijing'));
+    assert.ok(visible.some(c=>c.name==='Guangzhou'));
+    for(const city of context.cities.filter(c=>!china.has(c.id)))assert.ok(visible.includes(city));
+    assert.deepEqual(context.cities.map(c=>c.id),before);
+    assert.equal(a.CityLocations.context(b),context);
+});
+
 test('cities show ordinary background winds without cyclones and drawing cannot create impacts',()=>{
     const s=loadSimulation(),a=s.api;a.setLand(()=>0.51);
     const b=a.makeBasin(8);s.context.noiseSeed(b.seed);
@@ -27,7 +45,7 @@ test('cities show ordinary background winds without cyclones and drawing cannot 
     s.evaluate('defineColors();UI.init();UI.viewBasin=testBasin;viewTick=testBasin.tick;land.drawn=true;drawCalls.length=0;');
     const before=JSON.stringify(b.windImpacts);
     a.CityOverlay.drawCities();
-    const cities=a.CityLocations.context(b).cities,labels=a.CityOverlay.labels;
+    const cities=a.CityLocations.visibleCities(b),labels=a.CityOverlay.labels;
     assert.equal(labels.length,cities.length);
     assert.ok(labels.every(l=>l.wind>0 && /^\d+$/.test(l.text)));
     assert.equal(s.context.drawCalls.filter(c=>/^\d+$/.test(c.value)).length,cities.length);
