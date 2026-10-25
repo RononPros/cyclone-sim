@@ -1,4 +1,4 @@
-// Western Pacific SST tuning and Atlantic-level Pacific shear for Normal mode.
+// Western Pacific SST tuning and gentler Pacific shear for Normal mode.
 // SST changes stay WPac-only; the shear correction covers EPac and WPac.
 (function(){
     const originalNormalAnomaly = ENV_DEFS.defaults.SSTAnomaly.mapFunc;
@@ -62,33 +62,32 @@
         }
     };
 
-    // --- Pacific vertical wind shear climatology (0.18.0) ---
-    // Calibrated against Normal Atlantic shear using the bundled p5 noise over
-    // 8-26 N, 10-90% map width, five seeds and all twelve months. This matches
-    // typical tropical-belt magnitudes while keeping local vector variability.
+    // --- Pacific vertical wind shear climatology (0.24.1) ---
+    // Start from the earlier Atlantic-calibrated seasonal factors, then reduce
+    // tropical-belt shear by another 20% and ease the subtropical transition.
     // These are game-balancing parameters, not real-world shear measurements.
     const originalNormalShear = ENV_DEFS.defaults.shear.mapFunc;
     ENV_DEFS[SIM_MODE_NORMAL].shear = {
-        version: 3,
+        version: 4,
         mapFunc: (u,x,y,z)=>{
             const shear = originalNormalShear(u,x,y,z);
             if(u.basin.mapType !== 7 && u.basin.mapType !== 8) return shear;
 
             const lat = abs(u.coord.latitude);
-            const seasonalFactor = u.piecewise(u.yearfrac(z),[
+            const seasonalFactor = 0.8*u.piecewise(u.yearfrac(z),[
                 [0.5,0.50], [1.5,0.46], [2.5,0.55], [3.5,0.40],
                 [4.5,0.34], [5.5,0.42], [6.5,0.54], [7.5,0.55],
                 [8.5,0.55], [9.5,0.57], [10.5,0.42], [11.5,0.51]
             ]);
 
-            // Match the development belt and fade toward the subtropics so
-            // jet/trough environments can still disrupt recurving cyclones.
+            // Keep more of the relief through the subtropics, then fade it
+            // out by 45 degrees so jet/trough environments remain disruptive.
             let latFactor;
             if(lat <= 3) latFactor = 0.75;
             else if(lat <= 8) latFactor = map(lat,3,8,0.75,1);
             else if(lat <= 26) latFactor = 1;
-            else if(lat <= 35) latFactor = map(lat,26,35,1,0.25);
-            else if(lat <= 45) latFactor = map(lat,35,45,0.25,0);
+            else if(lat <= 35) latFactor = map(lat,26,35,1,0.45);
+            else if(lat <= 45) latFactor = map(lat,35,45,0.45,0);
             else latFactor = 0;
 
             shear.mult(lerp(1,seasonalFactor,latFactor));

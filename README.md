@@ -1,7 +1,11 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.24.0 adds estimated short wind gusts, smaller city labels and
+Raptor Mod 0.24.1 eases Pacific environmental shear by another 20% in the
+8–26° tropical belt, with more relief through the subtropical transition.
+Normal and Calm inherit this balance; the correction fades out at 45°.
+
+Raptor Mod 0.24.0 added estimated short wind gusts, smaller city labels and
 independent city/heatmap value controls. The 0.23.0 Atlantic steering update remains.
 
 City labels use 9-unit text and 12-unit-high tags (previously 10 and 14), with
@@ -193,10 +197,13 @@ consecutive exposure hours, and ocean versus land-adjusted pressure potential.
 Contact hours reset when current weighted coverage falls below 1%; the residual
 influence still eases gradually as a storm returns offshore.
 
-Normal Eastern and Western Pacific shear is calibrated toward the Atlantic's
-typical tropical-belt magnitude over 8–26°N. Seasonal multipliers range from
-0.34 to 0.57 of stock shear in that belt and fade toward unchanged values at
-45° latitude. Vector direction, steering and procedural variability are retained.
+Normal Eastern and Western Pacific shear uses the earlier Atlantic-calibrated
+seasonal pattern with a further 20% magnitude reduction over 8–26°N in 0.24.1.
+Seasonal multipliers now range from 0.272 to 0.456 of stock shear in that belt.
+The latitude blend retains 45% of the correction at 35° (previously 25%), then
+fades to unchanged stock values at 45°. This eases the transition for recurving
+storms while keeping the jet zone disruptive. Direction, low/upper steering,
+SST, seasonal variability and other basin values retain their existing behavior.
 Calm inherits this correction and then applies its 10% shear increase. These are
 game-balancing values, not a real-world climatology or an exact per-location match.
 
