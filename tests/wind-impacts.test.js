@@ -50,6 +50,34 @@ test('the broader outer circulation reaches distant cities without raising peak 
         assert.ok(a.WindField.windAt(p,a.TemperatureEditor.destination(p.coord,km,0))<0.001);
 });
 
+test('terrain is substantially gentler in lowlands and remains bounded and ordered with elevation',()=>{
+    const {a}=fixture(),factor=a.WindField.terrainFactor;
+    assert.equal(factor(0),1);
+    assert.ok(factor(0.501)>=0.94,'lowest land retains at least 94% of open-terrain wind');
+    assert.ok(factor(0.6)>=0.9,'low terrain avoids the old steep initial reduction');
+    assert.ok(factor(1)>=0.64 && factor(1)<=0.66,'highest terrain retains about 65%');
+    let previous=1;
+    for(let i=0;i<=100;i++){
+        const terrain=0.5+i/200,current=factor(terrain);
+        const previousRelease=0.82*(1-0.3*i/100);
+        assert.ok(Number.isFinite(current) && current>=0.65-1e-12 && current<1);
+        assert.ok(current<=previous+1e-12,'higher terrain cannot increase wind in this model');
+        assert.ok(current>previousRelease,'every land elevation receives a gentler reduction');
+        previous=current;
+    }
+});
+
+test('a 200 km/h cyclone gives about 100 km/h at the reported lowland distance',()=>{
+    const {a,sys}=fixture();sys.windSpeed=200/1.852;sys.windSize=1;
+    const profile=a.WindField.profile(sys,sys.storm);
+    const city=a.TemperatureEditor.destination(profile.coord,150,0);
+    const local=a.WindField.windAt(profile,city,0.51)*1.852;
+    assert.ok(local>=99 && local<=101,`lowland wind: ${local} km/h`);
+    const eyewall=a.TemperatureEditor.destination(profile.coord,profile.rmw,0);
+    const eyewallWind=a.WindField.windAt(profile,eyewall,0.51)*1.852;
+    assert.ok(eyewallWind>=188 && eyewallWind<=191,'lowland eyewall winds stay close to the storm maximum');
+});
+
 test('size initialization does not consume gameplay randomness and persists in active/advisory data',()=>{
     const {s,a,sys,b}=fixture();
     delete sys.windSize;

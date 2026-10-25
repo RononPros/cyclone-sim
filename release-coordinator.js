@@ -2,7 +2,7 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.21.0';
+    const BUILD = '0.21.1';
     const BUILD_DATE = '25 Oct 2026';
     const DATE_OCT_24 = '24 Oct 2026';
     const DATE_OCT_23 = '23 Oct 2026';
@@ -14,6 +14,15 @@
     const RELEASES = [
         {
             build: BUILD,
+            date: BUILD_DATE,
+            changes: [
+                'Reduced the local surface-wind penalty near sea level from about 18% to 5%.',
+                'Made the elevation penalty grow more gently across lowlands and hills, with the highest-terrain reduction eased from 42.6% to 35%.',
+                'Applied the gentler terrain response consistently to city readings, background surface winds, cyclone wind shading, Human Risk and hourly wind impacts.'
+            ]
+        },
+        {
+            build: '0.21.0',
             date: BUILD_DATE,
             changes: [
                 'Reduced visible city density in China with wider display spacing, retaining city histories and the existing exposure grid.',

@@ -22,10 +22,11 @@ test('the actual hourly update loop advances land exposure once per simulated ho
 test('UI initialization displays the current build with the correct historical release dates',()=>{
     const s=loadSimulation();
     s.evaluate('defineColors(); UI.init();');
-    assert.equal(s.context.RAPTOR_MOD_BUILD,'0.21.0');
+    assert.equal(s.context.RAPTOR_MOD_BUILD,'0.21.1');
     const releases=s.context.RAPTOR_MOD_CHANGELOG;
-    assert.equal(releases[0].build,'0.21.0');
+    assert.equal(releases[0].build,'0.21.1');
     assert.equal(releases[0].date,'25 Oct 2026');
+    assert.equal(releases.find(r=>r.build==='0.21.0').date,'25 Oct 2026');
     assert.equal(releases.find(r=>r.build==='0.20.0').date,'25 Oct 2026');
     assert.equal(releases.find(r=>r.build==='0.19.0').date,'24 Oct 2026');
     assert.equal(releases.find(r=>r.build==='0.18.1').date,'24 Oct 2026');
