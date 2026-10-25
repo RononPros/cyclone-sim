@@ -2,7 +2,7 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.22.0';
+    const BUILD = '0.23.0';
     const BUILD_DATE = '25 Oct 2026';
     const DATE_OCT_24 = '24 Oct 2026';
     const DATE_OCT_23 = '23 Oct 2026';
@@ -14,6 +14,18 @@
     const RELEASES = [
         {
             build: BUILD,
+            date: BUILD_DATE,
+            changes: [
+                'Retuned Atlantic steering so Gulf of Mexico storms can turn north and northeast as the western edge of the subtropical ridge retreats.',
+                'The Bermuda/Azores ridge now varies with basin seed as well as season and time; westward-extending ridge patterns still support westward tracks.',
+                'Added smooth eastward-moving troughs across the Gulf and western Atlantic, with stronger seasonal influence in autumn and winter.',
+                'Applied the same synoptic flow to low- and upper-level steering so shallow and deep storms, hourly movement and track forecasts share the new weather patterns.',
+                'Calm inherits the Atlantic steering update. Weather phases reproduce from seed and time after reload without consuming random draws or requiring a new save format.',
+                'Preserved tropical Caribbean trade winds and the other basin maps and simulation modes; updated steering field versions mark older environmental reconstructions as changed.'
+            ]
+        },
+        {
+            build: '0.22.0',
             date: BUILD_DATE,
             changes: [
                 'Fixed high-intensity outer winds flattening as a shrinking eyewall cancelled rising peak winds. Core contraction now stops above 200 km/h while independent storm sizes remain.',

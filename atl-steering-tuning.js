@@ -1,7 +1,7 @@
 // Atlantic steering climatology tuning for Normal mode.
 // Moves the jet north to a more realistic seasonal envelope and adds a broad,
-// wandering Bermuda/Azores ridge so Gulf/Caribbean and western-Atlantic flow
-// are not controlled by the same nearly zonal steering everywhere.
+// wandering Bermuda/Azores ridge, its western edge and passing troughs.
+// All synoptic phases are pure functions of basin seed and simulated time.
 (function(){
     const ATLANTIC_MAP_TYPE = 6;
     const originalNormalLL = ENV_DEFS.defaults.LLSteering.mapFunc;
@@ -9,6 +9,19 @@
     const originalNormalJet = ENV_DEFS.defaults.jetstream.mapFunc;
 
     const isAtlantic = u=>u.basin.mapType === ATLANTIC_MAP_TYPE;
+
+    // Hashing does not advance either the gameplay or environmental RNG. The
+    // same weather pattern can be evaluated by forecasts and restored saves.
+    const seedUnit = (seed,channel)=>{
+        let v = (Number(seed)>>>0)^Math.imul(channel,0x9e3779b9);
+        v = Math.imul(v^(v>>>16),0x21f0aaad);
+        v = Math.imul(v^(v>>>15),0x735a2d97);
+        return ((v^(v>>>15))>>>0)/4294967296;
+    };
+    const smooth = (a,b,value)=>{
+        const q = constrain((value-a)/(b-a),0,1);
+        return q*q*(3-2*q);
+    };
 
     const ridgeState = (u,z)=>{
         const s = u.yearfrac(z);
@@ -24,7 +37,7 @@
             [9.5,31.5],
             [11,29.0]
         ]);
-        const strength = u.piecewise(s,[
+        const seasonalStrength = u.piecewise(s,[
             [0,0.80],
             [3,0.85],
             [5,1.00],
@@ -33,14 +46,59 @@
             [11,0.90]
         ]);
 
-        const lon = -48
-            + 7*Math.sin(TAU*z/(24*42) + 0.8)
-            + 3*Math.sin(TAU*z/(24*97) + 2.1);
+        const phase = seedUnit(u.basin.seed,1)*TAU;
+        const phase2 = seedUnit(u.basin.seed,2)*TAU;
+        const lon = -50
+            + 9*Math.sin(TAU*z/(24*42) + phase)
+            + 4*Math.sin(TAU*z/(24*97) + phase2);
         const lat = baseLat
-            + 1.8*Math.sin(TAU*z/(24*55) + 1.5)
-            + 0.8*Math.sin(TAU*z/(24*121) + 0.2);
+            + 1.8*Math.sin(TAU*z/(24*55) + phase2)
+            + 0.8*Math.sin(TAU*z/(24*121) + phase);
+        const strength = seasonalStrength*(0.9+0.2*Math.sin(TAU*z/(24*31)+phase));
+        const westEdge = lon - (35+5*Math.sin(TAU*z/(24*63)+phase2)+4*(strength-1));
 
-        return {lon,lat,strength};
+        return {lon,lat,strength,westEdge};
+    };
+
+    const westernFlow = (u,z)=>{
+        const {longitude:lon,latitude:lat} = u.coord;
+        // Smooth geographical blending preserves the tropical Atlantic trades
+        // and avoids a visible seam around the Gulf / western Atlantic.
+        const gate = smooth(-106,-99,lon)*(1-smooth(-63,-53,lon))
+            *smooth(17,23,lat)*(1-smooth(35,43,lat));
+        if(!gate) return {x:0,y:0};
+
+        const ridge = ridgeState(u,z);
+        const open = 1-smooth(ridge.westEdge-5,ridge.westEdge+7,lon);
+        // West of the retreating ridge, easterlies relax and poleward flow
+        // strengthens. A westward-extending ridge still permits westward tracks.
+        let x = 0.85*open*ridge.strength;
+        let y = -0.65*open*ridge.strength;
+
+        const days = z/24;
+        const period = 8+4*seedUnit(u.basin.seed,3);
+        const phase = days/period+seedUnit(u.basin.seed,4);
+        const cycle = Math.floor(phase);
+        const seasonal = u.piecewise(u.yearfrac(z),[
+            [0,4.8],[3,4.0],[6,2.6],[8,2.9],[10,4.8],[11,5.0]
+        ]);
+        // Broad cyclonic troughs travel eastward. Their southern/eastern flank
+        // supplies eastward/poleward steering as a trough approaches the Gulf.
+        // Smooth birth/death envelopes make the event-list rollover continuous.
+        for(let i=cycle-3;i<=cycle;i++){
+            const age = (phase-i)*period;
+            const life = smooth(0,2,age)*(1-smooth(24,28,age));
+            if(!life) continue;
+            const troughLon = -125+6*age;
+            const troughLat = 38+3*(2*seedUnit(u.basin.seed,100+i)-1);
+            const dx = (lon-troughLon)/12;
+            const dy = (lat-troughLat)/11;
+            const magnitude = seasonal*(0.35+seedUnit(u.basin.seed,200+i))
+                *life*Math.exp(-0.5*(dx*dx+dy*dy));
+            x -= dy*magnitude;
+            y -= dx*magnitude;
+        }
+        return {x:x*gate,y:y*gate};
     };
 
     const ridgeVector = (u,x,y,z,layerScale)=>{
@@ -156,7 +214,7 @@
 
     // --- Low-level steering ---
     ENV_DEFS[SIM_MODE_NORMAL].LLSteering = {
-        version: 2,
+        version: 3,
         mapFunc: (u,x,y,z)=>{
             if(!isAtlantic(u)) return originalNormalLL(u,x,y,z);
 
@@ -210,6 +268,8 @@
 
             const ridge = ridgeVector(u,x,y,z,1.10);
             u.vec.add(ridge.x,ridge.y);
+            const flow = westernFlow(u,z);
+            u.vec.add(flow.x,flow.y);
             return u.vec;
         }
     };
@@ -219,7 +279,7 @@
     // of the same subtropical ridge so deep hurricanes still feel the western
     // ridge edge instead of instantly forgetting it as depth increases.
     ENV_DEFS[SIM_MODE_NORMAL].ULSteering = {
-        version: 2,
+        version: 3,
         mapFunc: (u,x,y,z)=>{
             const base = originalNormalUL(u,x,y,z);
             if(!isAtlantic(u)) return base;
@@ -229,6 +289,10 @@
 
             const carib = caribbeanTurnState(u,z);
             base.add(0,-carib.lift);
+            // The same synoptic flow in both layers turns shallow and deep
+            // systems without inventing extra shear solely from this correction.
+            const flow = westernFlow(u,z);
+            base.add(flow.x,flow.y);
             return base;
         }
     };
