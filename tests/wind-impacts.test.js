@@ -39,6 +39,17 @@ test('storm size increases distant winds and spherical distance wraps the dateli
     assert.ok(a.WindField.windAt(p,new a.Coordinate(-179.7,-20))>30);
 });
 
+test('the broader outer circulation reaches distant cities without raising peak wind',()=>{
+    const {a,sys}=fixture();sys.windSpeed=150;sys.windSize=1;
+    const p=a.WindField.profile(sys,sys.storm);
+    const distant=a.TemperatureEditor.destination(p.coord,600,0);
+    assert.ok(a.WindField.windAt(p,distant)>=34,'storm-force winds reach 600 km offshore');
+    assert.ok(a.WindField.windAt(p,distant,0.51)>25,'land friction still permits substantial distant winds');
+    close(a.WindField.windAt(p,a.TemperatureEditor.destination(p.coord,p.rmw,0)),150);
+    for(const km of [p.outer-1,p.outer,p.outer+1])
+        assert.ok(a.WindField.windAt(p,a.TemperatureEditor.destination(p.coord,km,0))<0.001);
+});
+
 test('size initialization does not consume gameplay randomness and persists in active/advisory data',()=>{
     const {s,a,sys,b}=fixture();
     delete sys.windSize;

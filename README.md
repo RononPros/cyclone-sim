@@ -1,17 +1,25 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.20.0 adds permanent city wind readouts and wind-footprint impacts,
-including damage while the cyclone centre remains offshore.
+Raptor Mod 0.21.0 broadens cyclone wind fields, reduces city-label crowding in
+China, and adds independent display switches for cities and storm-wind shading.
 
 City dots sit near representative real city locations on Earth basin maps. Their
-numeric wind labels are always visible on the map; units follow Settings. Between
+numeric wind labels are visible by default; units follow Settings. Open the
+in-game Menu to switch City winds and Cyclone wind field between Shown and Hidden.
+The city layer defaults to shown and the heatmap to hidden; both choices are
+remembered in browser settings. Hiding either layer leaves winds and hourly
+impacts active. Hidden city dots have no click targets or open detail card. Between
 cyclones they show ordinary background surface winds. Names are shown only in a detail card
 opened by clicking/tapping a dot or its number. The card shows estimated local
 one-minute sustained wind, peak recorded wind, hours at 34 kt or above, and
 simulated damage/deaths in the nearby area. Historical city observations are
 retained after tracking begins. City coordinates and source notes: [CITY_DATA.md](CITY_DATA.md).
 Synthetic maps generate unnamed settlements on their own land.
+Chinese city labels have 36-unit display spacing, retaining the largest eligible
+locations first. Other countries keep their existing dots. This only filters the
+display: all 821 catalogue entries, existing tracked cities, city histories and
+the impact exposure grid are retained.
 
 Background surface wind has its own seeded environmental noise channels, varies
 with location, season and simulated time, and saves its state with the other
@@ -30,6 +38,13 @@ change the total and no archived city observation is available.
 The shared cyclone footprint uses spherical distance, a persistent storm-size
 factor, a radius of maximum wind, an inner core, outer decay and terrain
 reduction. It is a simplified symmetric game model, not an operational forecast.
+The outer power-law decay is broader in 0.21.0 (exponent 0.50 for tropical and
+subtropical systems, 0.45 otherwise), with a smooth cutoff at 600–3000 km depending
+on intensity, type and saved storm size. Peak wind and radius of maximum wind
+retain their previous definitions. The optional cyclone heatmap samples these
+same terrain-adjusted winds over land and water from 17 kt upward. It excludes
+background winds, follows the selected analysis time, refreshes after paused
+storm edits, and keeps tracks, icons and city readouts above its shading.
 The same local wind calculation drives cities, Human Risk and a 6-unit land
 exposure grid. Rainfall, flooding and storm surge are not modeled by this feature.
 

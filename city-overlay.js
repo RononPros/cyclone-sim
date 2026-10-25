@@ -1,4 +1,4 @@
-// Permanent numeric city-wind labels. Names are confined to the optional detail
+// Toggleable numeric city-wind labels. Names are confined to the optional detail
 // card, and all rendering is observational: impacts advance only in Basin.
 const CityOverlay = (()=>{
     let card,selectedId=null,lastBasin,labels=[];
@@ -24,7 +24,7 @@ const CityOverlay = (()=>{
             let best,bestCost=Infinity;
             for(const [dx,dy] of positions){
                 const x=Math.max(2,Math.min(WIDTH-width-2,city.x+dx));
-                const y=Math.max(32,Math.min(HEIGHT-height-32,city.y+dy));
+                const y=Math.max(55,Math.min(HEIGHT-height-32,city.y+dy));
                 let cost=0;
                 for(const old of placed){
                     const w=Math.max(0,Math.min(x+width+2,old.x+old.width)-Math.max(x-2,old.x));
@@ -40,9 +40,11 @@ const CityOverlay = (()=>{
     }
     function drawCities(){
         const basin=UI.viewBasin;
-        if(!(basin instanceof Basin) || !land || !land.drawn)return;
+        if(simSettings.showCityWinds===false || !(basin instanceof Basin) || !land || !land.drawn){
+            labels=[];selectedId=null;if(card)card.hide();return;
+        }
         if(lastBasin!==basin){lastBasin=basin;selectedId=null;if(card)card.hide();}
-        const cities=CityLocations.context(basin).cities;
+        const cities=CityLocations.visibleCities(basin);
         const profiles=WindField.profiles(basin,viewTick);
         labels=layout(cities,cities.map(c=>displayedWind(basin,c,profiles)));
         push();textStyle(NORMAL);textSize(10);textAlign(CENTER,CENTER);
@@ -60,6 +62,7 @@ const CityOverlay = (()=>{
         pop();
     }
     function pick(x,y){
+        if(simSettings.showCityWinds===false || lastBasin!==UI.viewBasin)return null;
         let best=null,distance=12;
         for(const label of labels){
             if(x>=label.x && x<=label.x+label.width && y>=label.y && y<=label.y+label.height)return label.city;
@@ -81,7 +84,7 @@ const CityOverlay = (()=>{
             selectedId=null;card.hide();previousClick.call(this);
         };
         card=primaryWrapper.append(false,8,59,278,184,function(s){
-            if(sideMenu.showing || TemperatureEditor.panel.showing || selectedStorm){this.hide();return;}
+            if(simSettings.showCityWinds===false || sideMenu.showing || TemperatureEditor.panel.showing || selectedStorm){this.hide();return;}
             const basin=UI.viewBasin;
             const city=CityLocations.context(basin).cities.find(c=>c.id===selectedId);
             if(!city){this.hide();return;}

@@ -2,7 +2,7 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.20.0';
+    const BUILD = '0.21.0';
     const BUILD_DATE = '25 Oct 2026';
     const DATE_OCT_24 = '24 Oct 2026';
     const DATE_OCT_23 = '23 Oct 2026';
@@ -14,6 +14,18 @@
     const RELEASES = [
         {
             build: BUILD,
+            date: BUILD_DATE,
+            changes: [
+                'Reduced visible city density in China with wider display spacing, retaining city histories and the existing exposure grid.',
+                'Broadened cyclone outer wind fields with slower radial decay and a more distant smooth cutoff, while retaining peak wind and eyewall radius.',
+                'Cities, offshore impacts and Human Risk all use the broader shared wind model.',
+                'Added an optional cyclone-wind heatmap using the same terrain-adjusted local winds, with a legend in the selected wind unit.',
+                'Added independent City winds and Cyclone wind field visibility switches to the in-game side menu; both are remembered across reloads.',
+                'Hiding city labels clears their click targets and detail card. Both display switches leave wind physics and impact accounting active.'
+            ]
+        },
+        {
+            build: '0.20.0',
             date: BUILD_DATE,
             changes: [
                 'Added permanent city dots with estimated local sustained wind numbers in the selected wind unit; city names appear only in their detail cards.',

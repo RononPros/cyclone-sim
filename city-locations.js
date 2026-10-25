@@ -1,7 +1,7 @@
 // City dots represent a fixed selection of locations, independent of storms.
 // The land grid is also used by the impact engine; drawing never mutates it.
 const CityLocations = (()=>{
-    const CELL=6,MAX_CITIES=85;
+    const CELL=6,MAX_CITIES=85,CHINA_DOT_SPACING=36;
     const cache=new WeakMap();
     const distance=TemperatureAdjustments.distanceKm;
     const inMap=p=>p.x>=3 && p.x<WIDTH-3 && p.y>=36 && p.y<HEIGHT-36;
@@ -59,5 +59,18 @@ const CityLocations = (()=>{
         }
         const value={land,cities,cells};cache.set(basin,value);return value;
     }
-    return {CELL,MAX_CITIES,context};
+    function visibleCities(basin){
+        // Declutter the display only. Keep all existing city exposure, IDs and
+        // history intact so hiding a label cannot change losses or population.
+        const visible=[],china=[];
+        for(const city of context(basin).cities){
+            if(CITY_CHINA_IDS.has(city.id)){
+                if(china.some(c=>Math.hypot(c.x-city.x,c.y-city.y)<CHINA_DOT_SPACING))continue;
+                china.push(city);
+            }
+            visible.push(city);
+        }
+        return visible;
+    }
+    return {CELL,MAX_CITIES,CHINA_DOT_SPACING,context,visibleCities};
 })();
