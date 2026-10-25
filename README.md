@@ -1,7 +1,40 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.23.0 adds varied Atlantic Gulf steering through a seeded, shifting
+Raptor Mod 0.24.0 adds estimated short wind gusts, smaller city labels and
+independent city/heatmap value controls. The 0.23.0 Atlantic steering update remains.
+
+City labels use 9-unit text and 12-unit-high tags (previously 10 and 14), with
+measured text widths, tighter padding and retained click/touch targets. Menu →
+City values cycles Wind, Gusts and Wind + gusts; the default is both, e.g.
+`85 G110`. All numbers use the wind unit selected in Settings; `G` identifies the
+estimated 3-second gust. City cards always include both local values and their
+recorded peaks. Menu → Field values independently switches the optional cyclone
+heatmap between sustained wind and estimated gusts. The two value modes and the
+existing layer visibility switches persist in browser settings.
+
+Gusts are calculated from the local one-minute sustained wind **after** radial
+decay, motion asymmetry, land friction and directional terrain shelter. The gust
+factor is 1.25–1.45 over land and 1.15–1.30 over water. These are tunable game
+ranges, informed by [short-gust conversion research](https://www.aoml.noaa.gov/hrd/Powell/ASOS.pdf),
+not a detailed turbulence model or a measured roughness map. Land/water is the
+only exposure distinction; higher elevation does not automatically raise the
+gust factor. Two smooth spherical waves with 36- and 17-hour periods provide
+spatially coherent variation; their phase comes from basin seed without random
+draws. Thus values are stable while paused and reproduce across reloads, including
+at the dateline. Ordinary background weather receives gust estimates too.
+Hourly simulation steps estimate brief gusts rather than resolving second-scale
+bursts. The cyclone heatmap continues to exclude ordinary background weather.
+
+Hourly city records now retain gust and peak gust alongside sustained wind and
+area impacts (impact-record version 2). Version-1 saves and six-column city
+history rows migrate without resetting wind observations, exposure or losses;
+gusts unavailable in those old observations remain unknown. New gust peaks begin
+when the updated simulation first records them. Rendering and display switches
+cannot create records or damage. Cyclone categories, Human Risk and the existing
+sustained-wind impact calculation are unchanged by the gust estimates.
+
+Raptor Mod 0.23.0 added varied Atlantic Gulf steering through a seeded, shifting
 subtropical ridge and passing troughs. The 0.22.0 asymmetric winds, directional
 terrain shelter, stronger extreme-storm winds and finer core shading remain.
 
@@ -29,14 +62,14 @@ older environmental reconstructions as changed, while recorded storm tracks,
 city observations and impact totals stay recorded.
 
 City dots sit near representative real city locations on Earth basin maps. Their
-numeric wind labels are visible by default; units follow Settings. Open the
+numeric wind/gust labels are visible by default; units follow Settings. Open the
 in-game Menu to switch City winds and Cyclone wind field between Shown and Hidden.
 The city layer defaults to shown and the heatmap to hidden; both choices are
 remembered in browser settings. Hiding either layer leaves winds and hourly
 impacts active. Hidden city dots have no click targets or open detail card. Between
 cyclones they show ordinary background surface winds. Names are shown only in a detail card
 opened by clicking/tapping a dot or its number. The card shows estimated local
-one-minute sustained wind, peak recorded wind, hours at 34 kt or above, and
+one-minute sustained wind, estimated gust, both recorded peaks, hours at 34 kt or above, and
 simulated damage/deaths in the nearby area. Historical city observations are
 retained after tracking begins. City coordinates and source notes: [CITY_DATA.md](CITY_DATA.md).
 Synthetic maps generate unnamed settlements on their own land.
@@ -53,7 +86,7 @@ boost adds up to 6 kt, tapering with distance over a 500 km scale. It is a game
 climatology adjustment, not direct transfer of upper-level jet speed to the ground.
 Background winds are capped at 25 kt
 before terrain reduction, below the destructive-wind threshold in this game.
-The displayed local speed is the stronger of background and cyclone wind;
+The local sustained speed is the stronger of background and cyclone wind;
 scalar wind speeds are not added together. The Background wind (open terrain)
 map layer shows the unreduced field; city readings include local terrain reduction.
 Missing legacy background archives show an em dash where the background could
@@ -93,8 +126,9 @@ advisories estimate motion from their preceding six-hour track segment; a lone
 old advisory defaults to stationary. Saved city observations and impact totals
 remain their recorded values.
 
-The optional cyclone heatmap samples these same local winds over land and water
-from 17 kt upward. Its base grid is 8 map units, refining to 2 and 1 near strong
+The optional cyclone heatmap samples these same local winds, or their estimated
+gusts, over land and water from 17 kt upward in the selected measure. Its base
+grid is 8 map units, refining to 2 and 1 near strong
 cores, with extra extreme colours at 170 and 210 kt (about 315 and 389 km/h).
 It excludes background winds, follows the selected analysis time, refreshes after
 paused storm or motion edits, and keeps tracks, icons and city readouts above

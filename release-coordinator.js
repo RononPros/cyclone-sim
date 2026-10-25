@@ -2,7 +2,7 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.23.0';
+    const BUILD = '0.24.0';
     const BUILD_DATE = '25 Oct 2026';
     const DATE_OCT_24 = '24 Oct 2026';
     const DATE_OCT_23 = '23 Oct 2026';
@@ -14,6 +14,19 @@
     const RELEASES = [
         {
             build: BUILD,
+            date: BUILD_DATE,
+            changes: [
+                'Added estimated short wind gusts to city readings and background weather, calculated from the actual local sustained wind after terrain and directional shelter.',
+                'Gust factors vary smoothly with location, basin seed and simulated time, using a coarse land/water exposure assumption; pausing, drawing and reloading do not randomize the result.',
+                'Made city tags smaller with 9-unit text and 12-unit height, and added persistent Wind, Gusts and Wind + gusts modes. Both values are shown by default, with G identifying gusts.',
+                'Added an independent Wind/Gusts value switch for the cyclone heatmap, with the selected measure identified in its legend.',
+                'City cards now show sustained wind, estimated 3-second gust, recorded wind and gust peaks, exposure hours and area impacts.',
+                'Hourly gust observations and peak gusts persist with city history. Older saves retain their wind/impact records and show unavailable historical gusts as a dash.',
+                'Gusts are display and observation estimates; sustained-wind cyclone categories, Human Risk and hourly damage/death calculations retain their existing behavior.'
+            ]
+        },
+        {
+            build: '0.23.0',
             date: BUILD_DATE,
             changes: [
                 'Retuned Atlantic steering so Gulf of Mexico storms can turn north and northeast as the western edge of the subtropical ridge retreats.',
