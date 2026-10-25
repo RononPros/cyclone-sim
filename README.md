@@ -1,8 +1,8 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.21.0 broadens cyclone wind fields, reduces city-label crowding in
-China, and adds independent display switches for cities and storm-wind shading.
+Raptor Mod 0.21.1 uses gentler local terrain wind reduction, especially over
+lowlands, alongside broader cyclone winds and toggleable city/wind overlays.
 
 City dots sit near representative real city locations on Earth basin maps. Their
 numeric wind labels are visible by default; units follow Settings. Open the
@@ -38,6 +38,12 @@ change the total and no archived city observation is available.
 The shared cyclone footprint uses spherical distance, a persistent storm-size
 factor, a radius of maximum wind, an inner core, outer decay and terrain
 reduction. It is a simplified symmetric game model, not an operational forecast.
+Terrain wind reduction starts at about 5% near sea level and grows smoothly to
+35% over the highest mapped terrain, eased from the previous 18–42.6% range.
+The elevation response is gentler in lowlands and hills. This same local factor
+applies to background winds, cyclone winds, city readings, wind shading, Human
+Risk and hourly impacts. These are game-balancing parameters; the terrain index
+does not resolve local surface roughness, wind direction or ridge acceleration.
 The outer power-law decay is broader in 0.21.0 (exponent 0.50 for tropical and
 subtropical systems, 0.45 otherwise), with a smooth cutoff at 600–3000 km depending
 on intensity, type and saved storm size. Peak wind and radius of maximum wind

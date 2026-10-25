@@ -41,7 +41,11 @@ const WindField = (()=>{
         return result;
     }
     function terrainFactor(terrain){
-        return terrain>0 ? 0.82*(1-0.3*clamp((terrain-0.5)/0.5,0,1)) : 1;
+        if(!(terrain>0))return 1;
+        // Keep lowlands close to the open-water wind. The elevation penalty
+        // grows gently near sea level, with stronger sheltering higher up.
+        const height=clamp((terrain-0.5)/0.5,0,1);
+        return 0.95-0.3*Math.pow(height,1.5);
     }
     function windAt(p,coord,terrain=0){
         if(!p.maximum)return 0;
