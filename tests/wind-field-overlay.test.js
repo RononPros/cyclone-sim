@@ -73,3 +73,17 @@ test('new visibility settings migrate older settings and persist independently',
     assert.equal(s.evaluate('simSettings.showWindField'),true);
     assert.equal(s.evaluate('oldOrder.every((k,i)=>simSettings[k]===oldValues[i])'),true);
 });
+
+test('heatmap resolves the core more finely, shows extreme bands, and refreshes a paused motion change',()=>{
+    const {a,b}=fixture();
+    const sys=a.makeSystem(b,139.75,30,{windSize:1,windSpeed:250,windMotionEast:-25,windMotionNorth:0});
+    b.activeSystems.push(sys);a.setSettings({showWindField:true});a.CycloneWindOverlay.draw();
+    const first=a.CycloneWindOverlay.cells;
+    assert.ok(first.some(c=>c.width===1 && c.height===1),'one-pixel cells resolve the eyewall');
+    assert.ok(first.some(c=>c.width===8),'distant wind keeps the coarser display grid');
+    assert.ok(first.every(c=>c.x-c.width/2>=0 && c.x+c.width/2<=960 && c.y-c.height/2>=0 && c.y+c.height/2<=540));
+    assert.ok(first.some(c=>a.CycloneWindOverlay.bandFor(c.wind).minimum>=210),'extreme winds get a distinct high band');
+    sys.windMotionEast=25;a.CycloneWindOverlay.draw();
+    assert.notEqual(a.CycloneWindOverlay.cells,first,'heading changes invalidate the cached shade');
+    assert.notEqual(a.CycloneWindOverlay.bandFor(180),a.CycloneWindOverlay.bandFor(220));
+});

@@ -806,6 +806,8 @@ class StormData{
         this.pressure = undefined;
         this.windSpeed = undefined; // in knots
         this.windSize = undefined;
+        this.windMotionEast = undefined;
+        this.windMotionNorth = undefined;
         this.type = undefined;
         if(x instanceof LoadData){
             this.load(x,y);
@@ -825,7 +827,7 @@ class StormData{
         let obj = {};
         let {longitude, latitude} = this.coord();
         obj.pos = {longitude, latitude};
-        for(let p of ['pressure','windSpeed','type','windSize']) obj[p] = this[p];
+        for(let p of ['pressure','windSpeed','type','windSize','windMotionEast','windMotionNorth']) obj[p] = this[p];
         return obj;
     }
 
@@ -837,7 +839,7 @@ class StormData{
                     this.pos = Coordinate.convertToXY(this.basin.mapType, obj.pos.longitude, obj.pos.latitude);
                 else
                     this.pos = createVector(obj.pos.x,obj.pos.y);
-                for(let p of ['pressure','windSpeed','type','windSize']) this[p] = obj[p];
+                for(let p of ['pressure','windSpeed','type','windSize','windMotionEast','windMotionNorth']) this[p] = obj[p];
             }else{
                 let str = data.value;
                 let arr = decodeB36StringArray(str);
@@ -861,6 +863,7 @@ class StormData{
         let pressure = [];
         let windSpeed = [];
         let windSize = [];
+        let windMotionEast = [],windMotionNorth = [];
         let type = [];
         for(let d of arr){
             if(d instanceof StormData){
@@ -870,6 +873,8 @@ class StormData{
                 pressure.push(constrain(d.pressure,0,pow(2,16)-1));
                 windSpeed.push(constrain(d.windSpeed,0,pow(2,16)-1));
                 windSize.push(Number.isFinite(d.windSize)?d.windSize:0);
+                windMotionEast.push(Number.isFinite(d.windMotionEast)?d.windMotionEast:NaN);
+                windMotionNorth.push(Number.isFinite(d.windMotionNorth)?d.windMotionNorth:NaN);
                 type.push(d.type);
             }
         }
@@ -878,6 +883,8 @@ class StormData{
         obj.pressure = new Uint16Array(pressure);
         obj.windSpeed = new Uint16Array(windSpeed);
         obj.windSize = new Float32Array(windSize);
+        obj.windMotionEast = new Float32Array(windMotionEast);
+        obj.windMotionNorth = new Float32Array(windMotionNorth);
         obj.type = new Uint8ClampedArray(type);
         return obj;
     }
@@ -908,6 +915,8 @@ class StormData{
                 for(let i=0;i<x.length;i++){
                     arr[i] = new StormData(basin,x[i],y[i],pressure[i],windSpeed[i],type[i]);
                     arr[i].windSize = obj.windSize && obj.windSize[i];
+                    for(const key of ['windMotionEast','windMotionNorth'])
+                        if(obj[key] && Number.isFinite(obj[key][i]))arr[i][key]=obj[key][i];
                 }
                 return arr;
             }else{
@@ -1053,6 +1062,8 @@ class ActiveSystem extends StormData{
             let activeAttribs = ACTIVE_ATTRIBS[basin.actMode] || ACTIVE_ATTRIBS.defaults;
             for(let v of activeAttribs)
                 this[v] = d[v] || 0;
+            this.windMotionEast=Number.isFinite(d.windMotionEast)?d.windMotionEast:0;
+            this.windMotionNorth=Number.isFinite(d.windMotionNorth)?d.windMotionNorth:0;
             this.storm = new Storm(basin,this);
             WindField.ensure(this);
             if(basin.tick%ADVISORY_TICKS===0) this.advisory();
@@ -1073,7 +1084,9 @@ class ActiveSystem extends StormData{
             STORM_ALGORITHM.defaults.steering(this,this.steering,u);
         // this.steering.add(this.interaction.fuji);
         let prevland = u.land();
+        const previousWindCoord=this.coord();
         this.pos.add(this.steering);
+        WindField.recordMotion(this,previousWindCoord);
 
         if(STORM_ALGORITHM[basin.actMode].core)
             STORM_ALGORITHM[basin.actMode].core(this,u);
@@ -1196,6 +1209,8 @@ class ActiveSystem extends StormData{
         let ty = this.type;
         let adv = new StormData(this.basin,x,y,p,w,ty);
         adv.windSize = WindField.ensure(this);
+        const motion=WindField.motionFor(this,this.fetchStorm());
+        adv.windMotionEast=motion.east;adv.windMotionNorth=motion.north;
         this.fetchStorm().updateStats(adv);
         this.fetchStorm().record.push(adv);
         this.doTrackForecast();
