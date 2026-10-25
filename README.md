@@ -1,9 +1,55 @@
 # cyclone-sim
 A p5.js tropical cyclone simulation game
 
-Raptor Mod 0.19.0 adds a global SST adjustment and custom warm/cold bubbles to
-the reproducible environmental seeds, coastal land interaction and Pacific shear
-tuning from 0.18.x.
+Raptor Mod 0.20.0 adds permanent city wind readouts and wind-footprint impacts,
+including damage while the cyclone centre remains offshore.
+
+City dots sit near representative real city locations on Earth basin maps. Their
+numeric wind labels are always visible on the map; units follow Settings. Between
+cyclones they show ordinary background surface winds. Names are shown only in a detail card
+opened by clicking/tapping a dot or its number. The card shows estimated local
+one-minute sustained wind, peak recorded wind, hours at 34 kt or above, and
+simulated damage/deaths in the nearby area. Historical city observations are
+retained after tracking begins. City coordinates and source notes: [CITY_DATA.md](CITY_DATA.md).
+Synthetic maps generate unnamed settlements on their own land.
+
+Background surface wind has its own seeded environmental noise channels, varies
+with location, season and simulated time, and saves its state with the other
+environmental fields. Low-level steering supplies direction rather than a
+map-units/hour-to-surface-speed conversion. A weather-dependent jet-corridor
+boost adds up to 6 kt, tapering with distance over a 500 km scale. It is a game
+climatology adjustment, not direct transfer of upper-level jet speed to the ground.
+Background winds are capped at 25 kt
+before terrain reduction, below the destructive-wind threshold in this game.
+The displayed local speed is the stronger of background and cyclone wind;
+scalar wind speeds are not added together. The Background wind (open terrain)
+map layer shows the unreduced field; city readings include local terrain reduction.
+Missing legacy background archives show an em dash where the background could
+change the total and no archived city observation is available.
+
+The shared cyclone footprint uses spherical distance, a persistent storm-size
+factor, a radius of maximum wind, an inner core, outer decay and terrain
+reduction. It is a simplified symmetric game model, not an operational forecast.
+The same local wind calculation drives cities, Human Risk and a 6-unit land
+exposure grid. Rainfall, flooding and storm surge are not modeled by this feature.
+
+Impacts accrue once per simulated hour, regardless of centre landfall. Each land
+cell is attributed to the strongest local storm; wind magnitudes are not added
+together. Damage reduces a finite simulated asset pool and fatalities reduce a
+finite simulated population pool, retaining fractional mortality until an integer
+is reached. City-area totals are allocations from this grid, not extra impacts.
+Regional totals follow the affected land's sub-basin; existing tropical
+centre-crossing landfalls are counted separately. Pre-classification impacts survive later TC formation.
+
+Cell loss state, city observations and storm size persist across save/reload.
+Older saves retain existing storm/season totals and begin new local tracking at
+the loaded hour. Earlier local impacts are unavailable, not reconstructed. Wind
+estimates before tracking use the simulator's existing six-hour advisory data.
+City area totals and cell depletion span the saved basin's lifetime; regional
+season statistics receive only new hourly increments. Rendering cannot create
+impacts, and repeated processing of the same hour is ignored.
+
+The 0.19.0 temperature editor and earlier environmental improvements remain:
 
 New Basin → Advanced has a Global SST adjustment slider (-5 to +5°C, 0.1°C
 steps). During a simulation, open the side menu → Temperature Editor. Opening

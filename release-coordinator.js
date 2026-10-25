@@ -2,8 +2,9 @@
 // Loaded last so older feature modules cannot accidentally downgrade the visible
 // build marker or hide newer changelog entries when they register themselves.
 (function(){
-    const BUILD = '0.19.0';
-    const BUILD_DATE = '24 Oct 2026';
+    const BUILD = '0.20.0';
+    const BUILD_DATE = '25 Oct 2026';
+    const DATE_OCT_24 = '24 Oct 2026';
     const DATE_OCT_23 = '23 Oct 2026';
     const DATE_SEP_9 = '9 Sep 2026';
     const DATE_23 = '23 Aug 2026';
@@ -14,6 +15,23 @@
         {
             build: BUILD,
             date: BUILD_DATE,
+            changes: [
+                'Added permanent city dots with estimated local sustained wind numbers in the selected wind unit; city names appear only in their detail cards.',
+                'Added a seeded, seasonal background surface-wind field so cities show ordinary weather between cyclones; stronger local cyclone winds take over without adding scalar wind speeds.',
+                'Background surface winds receive a modest weather-dependent boost near the jet corridor; upper-level jet speeds are not copied to the surface.',
+                'Placed representative Earth-basin cities using Natural Earth coordinates; synthetic maps use generated settlements on their own land.',
+                'Added persistent storm sizes and a shared radial wind footprint with an inner core, outer decay, spherical distances and terrain reduction.',
+                'Wind can now damage exposed land while the cyclone centre remains offshore. Damage and deaths accumulate hourly over land cells, with finite assets and population.',
+                'City-area, storm and regional impacts use the same calculation; overlapping storms attribute each land cell to the strongest local wind without scalar wind stacking.',
+                'Landfall remains a separate centre-crossing count. Pre-classification impacts are preserved when a disturbance becomes a tropical cyclone.',
+                'City detail cards show current wind, peak recorded wind, hours at tropical-storm force, nearby-area damage and deaths.',
+                'Local loss state, city history and storm size persist in saves; older saves retain previous totals and start new area tracking from the loaded hour.',
+                'Human Risk now uses the same local wind footprint as cities and impacts. Reading or hiding overlays does not create damage.'
+            ]
+        },
+        {
+            build: '0.19.0',
+            date: DATE_OCT_24,
             changes: [
                 'Added a Global SST adjustment slider from -5 to +5 C in New Basin / Advanced and in the in-game Temperature Editor.',
                 'Added custom stationary warm and cold bubbles with -10 to +10 C centre anomalies, 100-2500 km radii and smooth edges; overlapping bubbles add together.',
@@ -27,7 +45,7 @@
         },
         {
             build: '0.18.1',
-            date: BUILD_DATE,
+            date: DATE_OCT_24,
             changes: [
                 'Basin seeds now reproduce the starting environment and its evolution through dedicated random streams for each environmental noise channel.',
                 'Environment offsets, wobble directions and hourly wobble are independent of storm spawning, player actions and unrelated global random calls.',
