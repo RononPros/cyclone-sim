@@ -1,6 +1,6 @@
-// Raptor Mod 0.10.1: dynamic human-risk heatmap.
-// Uses the simulator's existing land/exposure proxy plus active-cyclone hazard.
-// No external population dataset is used in this first version.
+// Human Risk heatmap: 0.20.0 uses the shared local-wind footprint.
+// Risk retains the terrain/latitude exposure proxy; actual impact accounting
+// runs separately once per simulated hour through WindImpacts.
 (function(){
     const BUILD = '0.10.1';
     const BUILD_DATE = '21 Aug 2026';
@@ -96,7 +96,7 @@
             };
         }
 
-        const CELL = 10;
+        const CELL = CityLocations.CELL;
         const UPDATE_HOURS = 3;
         const MIN_RISK = 0.025;
         const riskBuffer = createBuffer(WIDTH,HEIGHT);
@@ -156,20 +156,8 @@
             cachedBasin = basin;
             cachedLand = land;
 
-            for(let y=CELL/2;y<HEIGHT;y+=CELL){
-                for(let x=CELL/2;x<WIDTH;x+=CELL){
-                    const coord = Coordinate.convertFromXY(basin.mapType,x,y);
-                    const lnd = land.get(coord);
-                    if(!lnd) continue;
+            exposureCells = CityLocations.context(basin).cells;
 
-                    const elevationFactor = pow(0.8,map(lnd,0.5,1,0,30,true));
-                    const latitudeFactor = (1 + basin.hemY(y)/HEIGHT) / 2;
-                    const exposure = constrain(elevationFactor*latitudeFactor,0,1);
-                    if(exposure < 0.002) continue;
-
-                    exposureCells.push({x,y,exposure});
-                }
-            }
         };
 
         const activeSignature = basin=>{
@@ -178,6 +166,7 @@
                 round(sys.pos.y),
                 round(sys.windSpeed),
                 round(sys.pressure),
+                sys.windSize,
                 sys.type
             ].join(':')).join('|');
         };
@@ -191,59 +180,12 @@
             lastMaxRisk = 0;
             riskCells = Object.create(null);
 
-            const hazards = [];
-            for(const sys of basin.activeSystems){
-                const wind = Number(sys.windSpeed) || 0;
-                if(wind < 20) continue;
-
-                const windFactor = map(wind,20,160,0,1,true);
-                const pressureFactor = map(sys.pressure,1018,900,0,1,true);
-                let intensity = 0.78*windFactor + 0.22*pressureFactor;
-                if(intensity <= 0) continue;
-
-                let typeFactor = 1;
-                if(sys.type===TROPWAVE) typeFactor = 0.55;
-                else if(sys.type===EXTROP) typeFactor = 0.72;
-                else if(sys.type===SUBTROP) typeFactor = 0.88;
-
-                intensity *= typeFactor;
-                const radius = 32 + 118*sqrt(constrain(intensity,0,1));
-                hazards.push({
-                    x: sys.pos.x,
-                    y: sys.pos.y,
-                    intensity: constrain(intensity,0,1),
-                    radius
-                });
-            }
-
-            if(hazards.length===0){
-                lastRiskTick = basin.tick;
-                lastPausedSignature = activeSignature(basin);
-                return;
-            }
+            const profiles = WindField.profiles(basin);
 
             for(const cell of exposureCells){
-                let survival = 1;
-
-                for(const h of hazards){
-                    const dx = cell.x-h.x;
-                    const dy = cell.y-h.y;
-                    const distance = sqrt(dx*dx+dy*dy);
-                    if(distance >= h.radius) continue;
-
-                    const d = distance/h.radius;
-                    let distanceFactor;
-                    if(d <= 0.16) distanceFactor = 1;
-                    else distanceFactor = pow(1-map(d,0.16,1,0,1,true),1.65);
-
-                    const localHazard = constrain(h.intensity*distanceFactor,0,0.97);
-                    survival *= (1-localHazard);
-                }
-
-                const combinedHazard = 1-survival;
-                if(combinedHazard<=0) continue;
-
-                const risk = constrain(combinedHazard*pow(cell.exposure,0.62),0,1);
+                const wind = WindField.strongest(profiles,cell.coord,cell.terrain).wind;
+                const hazard = constrain((wind-25)/130,0,1);
+                const risk = constrain(pow(hazard,1.3)*pow(cell.exposure,0.62),0,1);
                 if(risk < MIN_RISK) continue;
 
                 lastMaxRisk = max(lastMaxRisk,risk);
@@ -400,3 +342,4 @@
         };
     };
 })();
+

@@ -9,6 +9,7 @@ class Basin{
         this.tick = 0;
         this.lastSaved = 0;
         this.temperatureAdjustments = TemperatureAdjustments.create(opts.sstOffset);
+        this.windImpacts = WindImpacts.create(0);
         this.godMode = opts.godMode;
         this.SHem = opts.hem;
         this.actMode = opts.actMode || 0;
@@ -156,6 +157,7 @@ class Basin{
             metadata.needEnvLayerRefresh = true;
             this.env.record();
         }
+        WindImpacts.advance(this);
         let curTime = this.tickMoment();
         if(simSettings.doAutosave && (curTime.date()===1 || curTime.date()===15) && curTime.hour()===0)    // autosave at 00z on the 1st and 15th days of every month
             metadata.needSave = true;
@@ -520,6 +522,7 @@ class Basin{
             }
             b.subBasins = {};
             b.temperatureAdjustments = TemperatureAdjustments.serialize(this);
+            b.windImpacts = WindImpacts.serialize(this);
             for(let i in this.subBasins){
                 let s = this.subBasins[i];
                 if(s instanceof SubBasin) b.subBasins[i] = s.save();
@@ -600,6 +603,7 @@ class Basin{
                         }
                         this.mapType = obj.mapType;
                         this.temperatureAdjustments = TemperatureAdjustments.normalize(obj.temperatureAdjustments,obj.tick);
+                        this.windImpacts = WindImpacts.normalize(obj.windImpacts,obj.tick);
                         for(let a of obj.activeSystems){
                             this.activeSystems.push(new ActiveSystem(this,data.sub(a)));
                         }
@@ -681,6 +685,7 @@ class Basin{
                             }
                         }
                     }
+                    if(data.format<FORMAT_WITH_INDEXEDDB)this.windImpacts=WindImpacts.create(this.tick);
                     this.env.init(envData);
                     if(SEASON_CURVE[this.actMode])
                         seasonCurve = window[SEASON_CURVE[this.actMode]];

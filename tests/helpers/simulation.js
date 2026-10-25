@@ -88,10 +88,10 @@ function loadSimulation(){
     vm.runInContext(`
         buffers = new Map();
         seasonCurve = seasonalSine;
-        simSettings = {pressureDeepeningRate:1.96,windIntensificationRate:5.6,trackMode:0,stormDebugMode:false};
+        simSettings = {pressureDeepeningRate:1.96,windIntensificationRate:5.6,trackMode:0,stormDebugMode:false,speedUnit:0};
         land = {get:()=>0,getSubBasin:()=>0};
         globalThis.testAPI = {
-            LandInteraction,TemperatureAdjustments,TemperatureEditor,Coordinate,Environment,EnvNoiseChannel,ActiveSystem,Storm,Basin,Season,LoadData,
+            LandInteraction,TemperatureAdjustments,TemperatureEditor,WindField,WindImpacts,CityLocations,CityOverlay,StormData,Coordinate,Environment,EnvNoiseChannel,ActiveSystem,Storm,Basin,Season,LoadData,
             algorithms:STORM_ALGORITHM,envDefs:ENV_DEFS,activeAttributes:ACTIVE_ATTRIBS,
             modes:SIMULATION_MODES,normal:SIM_MODE_NORMAL,calm:SIM_MODE_CALM,experimental:SIM_MODE_EXPERIMENTAL,
             TROP,SUBTROP,TROPWAVE,EXTROP,SAVE_FORMAT,UI,

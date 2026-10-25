@@ -369,9 +369,8 @@ class Storm{
             this.peak = undefined;
             this.windPeak = undefined;
             this.ACE = 0;
-            this.damage = 0;
-            this.deaths = 0;
-            this.landfalls = 0;
+            // Local impacts already occurred on this basin's land grid; entering
+            // TC classification must not erase pre-classification impacts.
             if(wasTCB4Update) refreshTracks(true);
         }
         let newACE = 0;
@@ -806,6 +805,7 @@ class StormData{
         this.pos = undefined;
         this.pressure = undefined;
         this.windSpeed = undefined; // in knots
+        this.windSize = undefined;
         this.type = undefined;
         if(x instanceof LoadData){
             this.load(x,y);
@@ -825,7 +825,7 @@ class StormData{
         let obj = {};
         let {longitude, latitude} = this.coord();
         obj.pos = {longitude, latitude};
-        for(let p of ['pressure','windSpeed','type']) obj[p] = this[p];
+        for(let p of ['pressure','windSpeed','type','windSize']) obj[p] = this[p];
         return obj;
     }
 
@@ -837,7 +837,7 @@ class StormData{
                     this.pos = Coordinate.convertToXY(this.basin.mapType, obj.pos.longitude, obj.pos.latitude);
                 else
                     this.pos = createVector(obj.pos.x,obj.pos.y);
-                for(let p of ['pressure','windSpeed','type']) this[p] = obj[p];
+                for(let p of ['pressure','windSpeed','type','windSize']) this[p] = obj[p];
             }else{
                 let str = data.value;
                 let arr = decodeB36StringArray(str);
@@ -860,6 +860,7 @@ class StormData{
         let latitude = [];
         let pressure = [];
         let windSpeed = [];
+        let windSize = [];
         let type = [];
         for(let d of arr){
             if(d instanceof StormData){
@@ -868,6 +869,7 @@ class StormData{
                 latitude.push(coord.latitude);
                 pressure.push(constrain(d.pressure,0,pow(2,16)-1));
                 windSpeed.push(constrain(d.windSpeed,0,pow(2,16)-1));
+                windSize.push(Number.isFinite(d.windSize)?d.windSize:0);
                 type.push(d.type);
             }
         }
@@ -875,6 +877,7 @@ class StormData{
         obj.pos = {longitude: new Float32Array(longitude), latitude: new Float32Array(latitude)};
         obj.pressure = new Uint16Array(pressure);
         obj.windSpeed = new Uint16Array(windSpeed);
+        obj.windSize = new Float32Array(windSize);
         obj.type = new Uint8ClampedArray(type);
         return obj;
     }
@@ -904,6 +907,7 @@ class StormData{
                 let type = [...obj.type];
                 for(let i=0;i<x.length;i++){
                     arr[i] = new StormData(basin,x[i],y[i],pressure[i],windSpeed[i],type[i]);
+                    arr[i].windSize = obj.windSize && obj.windSize[i];
                 }
                 return arr;
             }else{
@@ -1050,6 +1054,7 @@ class ActiveSystem extends StormData{
             for(let v of activeAttribs)
                 this[v] = d[v] || 0;
             this.storm = new Storm(basin,this);
+            WindField.ensure(this);
             if(basin.tick%ADVISORY_TICKS===0) this.advisory();
         }
     }
@@ -1163,30 +1168,16 @@ class ActiveSystem extends StormData{
         let rType = this.fetchStorm().getStormDataByTick(basin.tick);
         rType = rType && rType.type;
         if(tropOrSub(rType!==null ? rType : this.type)){
-            let pop = lnd ? round(250000*(1+basin.hemY(y)/HEIGHT)*pow(0.8,map(lnd,0.5,1,0,30))) : 0;
-            let damPot = pow(1.062,this.windSpeed)-1;   // damage potential
-            let dedPot = pow(1.045,this.windSpeed)-1;    // death potential
-            let m = pow(1.5,randomGaussian());      // modifier
-            damPot *= m;
-            dedPot *= m;
-            let dam = pop*damPot*3.3*pow(1.1,random(-1,1));
-            let ded = round(pop*dedPot*0.0000017*pow(1.1,random(-1,1)));
             let lf = 0;
             if(!prevland && lnd) lf = 1;
             let sub = land.getSubBasin(Coordinate.convertFromXY(basin.mapType,x,y));
             if(!this.fetchStorm().inBasinTC || basin.subInBasin(sub)){
-                this.fetchStorm().damage += dam;
-                this.fetchStorm().damage = round(this.fetchStorm().damage*100)/100;
-                this.fetchStorm().deaths += ded;
                 this.fetchStorm().landfalls += lf;
             }
             let seas = basin.fetchSeason(-1,true,true);
             for(let subId of basin.forSubBasinChain(sub)){
                 if(basin.subInBasin(subId)){
                     let s = seas.stats(subId);
-                    s.damage += dam;
-                    s.damage = round(s.damage*100)/100;
-                    s.deaths += ded;
                     s.landfalls += lf;
                 }
             }
@@ -1204,6 +1195,7 @@ class ActiveSystem extends StormData{
         let w = round(this.windSpeed/WINDSPEED_ROUNDING)*WINDSPEED_ROUNDING;
         let ty = this.type;
         let adv = new StormData(this.basin,x,y,p,w,ty);
+        adv.windSize = WindField.ensure(this);
         this.fetchStorm().updateStats(adv);
         this.fetchStorm().record.push(adv);
         this.doTrackForecast();
